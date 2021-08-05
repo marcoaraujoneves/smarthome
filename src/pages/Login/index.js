@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import auth from '@react-native-firebase/auth';
 import {
   StyleSheet,
   KeyboardAvoidingView,
@@ -7,24 +8,29 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  View,
 } from 'react-native';
-
-import AuthContext from '../../contexts/auth';
 
 import logo from '../../assets/logo.png';
 
-export default function Login({route}) {
-  const [username, setUsername] = useState('');
+export default function Login() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const {authFunctions} = React.useContext(AuthContext);
+  const [hasError, setHasError] = useState();
 
   const handleSubmit = async () => {
-    if (!username || !password) {
+    if (!email || !password) {
       return;
     }
 
-    authFunctions.signIn({username, password});
+    setHasError(false);
+
+    try {
+      await auth().signInWithEmailAndPassword(email, password);
+    } catch (err) {
+      console.log(err.message);
+      setHasError(true);
+    }
   };
 
   return (
@@ -36,11 +42,11 @@ export default function Login({route}) {
           style={styles.input}
           placeholder="Type your email"
           placeholderTextColor="#868686"
-          keyboardType="default"
+          keyboardType="email-address"
           autoCapitalize="none"
           autoCorrect={false}
-          value={username}
-          onChangeText={setUsername}
+          value={email}
+          onChangeText={setEmail}
         />
 
         <TextInput
@@ -55,7 +61,18 @@ export default function Login({route}) {
           onChangeText={setPassword}
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+        {hasError ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>
+              Error on login. Check your credentials!
+            </Text>
+          </View>
+        ) : null}
+
+        <TouchableOpacity
+          style={styles.button}
+          disabled={!email || !password}
+          onPress={handleSubmit}>
           <Text style={styles.buttonText}> Login </Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
@@ -111,6 +128,21 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontWeight: 'bold',
     fontSize: 18,
+    fontFamily: 'Roboto',
+  },
+
+  errorContainer: {
+    width: 320,
+    padding: 16,
+    backgroundColor: '#B00020',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  errorText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 14,
     fontFamily: 'Roboto',
   },
 });
