@@ -9,25 +9,33 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Button,
 } from 'react-native';
 
 import logo from '../../assets/logo.png';
 
-export default function Login({navigation}) {
+export default function Register() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [hasError, setHasError] = useState();
 
   const handleSubmit = async () => {
-    if (!email || !password) {
+    if (!name || !email || !password) {
       return;
     }
 
     setHasError(false);
 
     try {
-      await auth().signInWithEmailAndPassword(email, password);
+      await auth().createUserWithEmailAndPassword(email, password);
+
+      const user = auth().currentUser;
+
+      if (user) {
+        await user.updateProfile({
+          displayName: name,
+        });
+      }
     } catch (err) {
       console.log(err.message);
       setHasError(true);
@@ -38,6 +46,17 @@ export default function Login({navigation}) {
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView behavior="padding" style={styles.form}>
         <Image source={logo} style={styles.logo} />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Type your name"
+          placeholderTextColor="#868686"
+          keyboardType="default"
+          autoCapitalize="words"
+          autoCorrect={false}
+          value={name}
+          onChangeText={setName}
+        />
 
         <TextInput
           style={styles.input}
@@ -74,17 +93,8 @@ export default function Login({navigation}) {
           style={styles.button}
           disabled={!email || !password}
           onPress={handleSubmit}>
-          <Text style={styles.buttonText}> Login </Text>
+          <Text style={styles.buttonText}> Register </Text>
         </TouchableOpacity>
-
-        <View style={styles.signUpContainer}>
-          <Text style={styles.signUpText}>Don't have an account?</Text>
-          <TouchableOpacity
-            style={styles.signUpButton}
-            onPress={() => navigation.navigate('Sign Up')}>
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
-          </TouchableOpacity>
-        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -154,27 +164,5 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 14,
     fontFamily: 'Roboto',
-  },
-
-  signUpContainer: {
-    marginTop: 36,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  signUpText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-
-  signUpButton: {
-    backgroundColor: 'transparent',
-    marginLeft: 8,
-  },
-
-  signUpButtonText: {
-    color: '#1e88d4',
-    fontSize: 15,
   },
 });

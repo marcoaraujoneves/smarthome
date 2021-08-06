@@ -7,6 +7,7 @@ import AuthContext from '../contexts/auth';
 
 import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
+import Register from '../pages/Register';
 
 const Stack = createStackNavigator();
 
@@ -51,13 +52,22 @@ function AuthNavigator() {
             },
           }}>
           {userAuth === null ? (
-            <Stack.Screen
-              name="Sign In"
-              component={Login}
-              options={{
-                animationTypeForReplace: isSigningOut ? 'pop' : 'push',
-              }}
-            />
+            <>
+              <Stack.Screen
+                name="Sign In"
+                component={Login}
+                options={{
+                  animationTypeForReplace: isSigningOut ? 'pop' : 'push',
+                }}
+              />
+              <Stack.Screen
+                name="Sign Up"
+                component={Register}
+                options={{
+                  animationTypeForReplace: 'push',
+                }}
+              />
+            </>
           ) : (
             <Stack.Screen name="Dashboard" component={Dashboard} />
           )}
