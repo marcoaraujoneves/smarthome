@@ -8,6 +8,7 @@ import AuthContext from '../contexts/auth';
 import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import Register from '../pages/Register';
+import NewHome from '../pages/NewHome';
 
 const Stack = createStackNavigator();
 
@@ -69,7 +70,16 @@ function AuthNavigator() {
               />
             </>
           ) : (
-            <Stack.Screen name="Dashboard" component={Dashboard} />
+            <>
+              <Stack.Screen name="Dashboard" component={Dashboard} />
+              <Stack.Screen
+                name="Register Home"
+                options={{
+                  headerLeft: () => null,
+                }}
+                component={NewHome}
+              />
+            </>
           )}
         </Stack.Navigator>
       </AuthContext.Provider>
