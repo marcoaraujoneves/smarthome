@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import auth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 import {
   StyleSheet,
   KeyboardAvoidingView,
@@ -13,7 +14,7 @@ import {
 
 import logo from '../../assets/logo.png';
 
-export default function NewHome() {
+export default function NewHome({navigation}) {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [country, setCountry] = useState('');
@@ -21,19 +22,33 @@ export default function NewHome() {
   const [city, setCity] = useState('');
   const [hasError, setHasError] = useState(false);
 
-  const dataNeeded = () => {
+  const isMissingData = () => {
     return !name || !address || !country || !county || !city;
   };
 
   const handleSubmit = async () => {
-    if (dataNeeded()) {
+    if (isMissingData()) {
+      setHasError(true);
       return;
     }
 
     setHasError(false);
 
     try {
-      console.log({name, address, country, county, city, hasError});
+      const {uid: userId} = auth().currentUser;
+
+      const homeId = database().ref('/home').push({
+        name,
+        address,
+        country,
+        county,
+        city,
+        owner: userId,
+      }).key;
+
+      await database().ref(`/user/${userId}`).update({home: homeId});
+
+      navigation.navigate('Dashboard');
     } catch (err) {
       console.log(err.message);
       setHasError(true);
@@ -47,13 +62,57 @@ export default function NewHome() {
 
         <TextInput
           style={styles.input}
-          placeholder="Type your name"
+          placeholder="Type a name"
           placeholderTextColor="#868686"
           keyboardType="default"
           autoCapitalize="words"
           autoCorrect={false}
           value={name}
           onChangeText={setName}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Type the address"
+          placeholderTextColor="#868686"
+          keyboardType="default"
+          autoCapitalize="words"
+          autoCorrect={false}
+          value={address}
+          onChangeText={setAddress}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Type your country name"
+          placeholderTextColor="#868686"
+          keyboardType="default"
+          autoCapitalize="words"
+          autoCorrect={false}
+          value={country}
+          onChangeText={setCountry}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Type your county/state name"
+          placeholderTextColor="#868686"
+          keyboardType="default"
+          autoCapitalize="words"
+          autoCorrect={false}
+          value={county}
+          onChangeText={setCounty}
+        />
+
+        <TextInput
+          style={styles.input}
+          placeholder="Type your city name"
+          placeholderTextColor="#868686"
+          keyboardType="default"
+          autoCapitalize="words"
+          autoCorrect={false}
+          value={city}
+          onChangeText={setCity}
         />
 
         {hasError ? (
@@ -64,11 +123,8 @@ export default function NewHome() {
           </View>
         ) : null}
 
-        <TouchableOpacity
-          style={styles.button}
-          disabled={() => dataNeeded()}
-          onPress={handleSubmit}>
-          <Text style={styles.buttonText}> Register </Text>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}> Create </Text>
         </TouchableOpacity>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -116,7 +172,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 4,
-    marginTop: 64,
+    marginTop: 36,
   },
 
   buttonText: {

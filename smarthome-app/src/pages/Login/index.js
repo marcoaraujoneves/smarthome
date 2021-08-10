@@ -9,7 +9,6 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Button,
 } from 'react-native';
 
 import logo from '../../assets/logo.png';
