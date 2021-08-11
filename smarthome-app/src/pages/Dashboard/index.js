@@ -3,9 +3,12 @@ import {SafeAreaView, StyleSheet, Text, TouchableOpacity} from 'react-native';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 
+import RoomModal from '../../components/RoomModal';
+
 export default function Dashboard({navigation}) {
   const [user, setUser] = useState({});
   const [home, setHome] = useState({});
+  const [showRoomModal, setShowRoomModal] = useState(false);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -43,7 +46,9 @@ export default function Dashboard({navigation}) {
     </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.container}>
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => setShowRoomModal(true)}>
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
 
@@ -51,6 +56,8 @@ export default function Dashboard({navigation}) {
         To start using this app, you need to add rooms and components. Just
         click the button above!
       </Text>
+
+      <RoomModal isVisible={showRoomModal} setIsVisible={setShowRoomModal} />
     </SafeAreaView>
   );
 }
