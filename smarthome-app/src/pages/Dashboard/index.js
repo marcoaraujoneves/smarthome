@@ -37,7 +37,7 @@ export default function Dashboard({navigation}) {
     loadUserData();
   }, [navigation]);
 
-  return home && home.components ? (
+  return home && home.rooms ? (
     <SafeAreaView style={styles.container}>
       <Text>Dashboard {user ? user.name : ''}</Text>
     </SafeAreaView>
