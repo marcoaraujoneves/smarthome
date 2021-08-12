@@ -4,7 +4,7 @@ import {StyleSheet, Modal, View, Image} from 'react-native';
 export default function LoadingModal({isVisible}) {
   return (
     <Modal
-      animationType="slide"
+      animationType="none"
       transparent={true}
       visible={isVisible}
       onRequestClose={() => {}}>
