@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import auth from '@react-native-firebase/auth';
+import database from '@react-native-firebase/database';
 import {
   StyleSheet,
   KeyboardAvoidingView,
@@ -12,12 +13,14 @@ import {
 } from 'react-native';
 
 import logo from '../../assets/logo.png';
+import LoadingModal from '../../components/LoadingModal';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [hasError, setHasError] = useState();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async () => {
     if (!name || !email || !password) {
@@ -25,6 +28,7 @@ export default function Register() {
     }
 
     setHasError(false);
+    setIsLoading(true);
 
     try {
       await auth().createUserWithEmailAndPassword(email, password);
@@ -35,6 +39,12 @@ export default function Register() {
         await user.updateProfile({
           displayName: name,
         });
+
+        await database().ref(`user/${user.uid}`).set({
+          name,
+        });
+
+        setIsLoading(false);
       }
     } catch (err) {
       console.log(err.message);
@@ -44,6 +54,7 @@ export default function Register() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <LoadingModal isVisible={isLoading} />
       <KeyboardAvoidingView behavior="padding" style={styles.form}>
         <Image source={logo} style={styles.logo} />
 

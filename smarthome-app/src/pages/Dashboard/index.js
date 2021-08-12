@@ -4,19 +4,31 @@ import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 
 import RoomModal from '../../components/RoomModal';
+import LoadingModal from '../../components/LoadingModal';
 
 export default function Dashboard({navigation}) {
   const [user, setUser] = useState({});
   const [home, setHome] = useState({});
   const [showRoomModal, setShowRoomModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const loadUserData = async () => {
+      if (!auth().currentUser) {
+        return;
+      }
+
+      setIsLoading(true);
+
       const {uid: userId} = auth().currentUser;
 
       const userSnap = await database().ref(`/user/${userId}`).once('value');
-      const userData = userSnap.val();
 
+      if (!userSnap.exists()) {
+        return;
+      }
+
+      const userData = userSnap.val();
       setUser(userData);
 
       if (!userData.home) {
@@ -35,6 +47,8 @@ export default function Dashboard({navigation}) {
 
       const homeData = homeSnap.val();
       setHome(homeData);
+
+      setIsLoading(false);
     };
 
     loadUserData();
@@ -58,6 +72,7 @@ export default function Dashboard({navigation}) {
       </Text>
 
       <RoomModal isVisible={showRoomModal} setIsVisible={setShowRoomModal} />
+      <LoadingModal isVisible={isLoading} setIsVisible={setShowRoomModal} />
     </SafeAreaView>
   );
 }
