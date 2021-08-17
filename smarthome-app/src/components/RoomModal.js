@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import database from '@react-native-firebase/database';
+import auth from '@react-native-firebase/auth';
 import {
   StyleSheet,
   Modal,
@@ -9,11 +10,28 @@ import {
   TextInput,
 } from 'react-native';
 
-export default function RoomModal({isVisible, setIsVisible}) {
+export default function RoomModal({isVisible, setIsVisible, handleNewRoom}) {
   const [name, setName] = useState('');
 
   const handleSubmit = async () => {
-    console.log(name);
+    handleNewRoom('LOADING');
+
+    const {uid: userId} = auth().currentUser;
+
+    const userSnap = await database().ref(`/user/${userId}`).once('value');
+    const {home} = userSnap.val();
+
+    const roomId = database().ref('/room').push({name}).key;
+
+    const roomsSnap = await database().ref(`/home/${home}/rooms`).once('value');
+    const rooms = roomsSnap.val() || [];
+
+    await database()
+      .ref(`/home/${home}/rooms`)
+      .set([...rooms, roomId]);
+
+    handleNewRoom('DONE');
+    setIsVisible(false);
   };
 
   return (

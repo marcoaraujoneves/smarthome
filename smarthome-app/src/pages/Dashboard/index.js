@@ -9,6 +9,7 @@ import LoadingModal from '../../components/LoadingModal';
 export default function Dashboard({navigation}) {
   const [user, setUser] = useState({});
   const [home, setHome] = useState({});
+  const [rooms, setRooms] = useState({});
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,23 +37,61 @@ export default function Dashboard({navigation}) {
         return;
       }
 
-      const homeSnap = await database()
-        .ref(`home/${userData.home}`)
-        .once('value');
-
-      if (!homeSnap.exists()) {
-        navigation.navigate('Register Home');
-        return;
-      }
-
-      const homeData = homeSnap.val();
-      setHome(homeData);
+      await loadHome(userData.home, true);
 
       setIsLoading(false);
     };
 
     loadUserData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation]);
+
+  const loadHome = async (homeId, shouldNavigateIfNotExists) => {
+    const homeSnap = await database().ref(`home/${homeId}`).once('value');
+
+    if (!homeSnap.exists() && shouldNavigateIfNotExists) {
+      navigation.navigate('Register Home');
+      return;
+    }
+
+    const homeData = homeSnap.val();
+
+    setHome({
+      ...homeData,
+      id: homeId,
+    });
+
+    if (homeData.rooms) {
+      await loadRooms(homeData.rooms);
+    }
+  };
+
+  const loadRooms = async roomsIds => {
+    const newRoomsObject = {};
+
+    for (let roomId of roomsIds) {
+      const roomSnap = await database().ref(`/room/${roomId}`).once('value');
+
+      if (roomSnap.exists()) {
+        setRooms({
+          ...newRoomsObject,
+          [roomId]: {...roomSnap.val(), id: roomId},
+        });
+      }
+    }
+  };
+
+  const handleNewRoom = async action => {
+    switch (action) {
+      case 'LOADING':
+        setIsLoading(true);
+        break;
+      case 'DONE':
+        await loadHome(home.id);
+        setIsLoading(false);
+        break;
+    }
+  };
 
   return home && home.rooms ? (
     <SafeAreaView style={styles.container}>
@@ -71,7 +110,11 @@ export default function Dashboard({navigation}) {
         click the button above!
       </Text>
 
-      <RoomModal isVisible={showRoomModal} setIsVisible={setShowRoomModal} />
+      <RoomModal
+        isVisible={showRoomModal}
+        setIsVisible={setShowRoomModal}
+        handleNewRoom={handleNewRoom}
+      />
       <LoadingModal isVisible={isLoading} setIsVisible={setShowRoomModal} />
     </SafeAreaView>
   );
