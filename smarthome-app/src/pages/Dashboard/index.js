@@ -5,11 +5,13 @@ import database from '@react-native-firebase/database';
 
 import RoomModal from '../../components/RoomModal';
 import LoadingModal from '../../components/LoadingModal';
+import RoomSelector from '../../components/RoomSelector';
 
 export default function Dashboard({navigation}) {
   const [user, setUser] = useState({});
   const [home, setHome] = useState({});
   const [rooms, setRooms] = useState({});
+  const [selectedRoom, setSelectedRoom] = useState(null);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -73,12 +75,17 @@ export default function Dashboard({navigation}) {
       const roomSnap = await database().ref(`/room/${roomId}`).once('value');
 
       if (roomSnap.exists()) {
-        setRooms({
-          ...newRoomsObject,
-          [roomId]: {...roomSnap.val(), id: roomId},
-        });
+        newRoomsObject[roomId] = {...roomSnap.val(), id: roomId};
       }
     }
+
+    const firstKey = Object.keys(newRoomsObject)[0];
+
+    if (firstKey) {
+      setSelectedRoom(firstKey);
+    }
+
+    setRooms(newRoomsObject);
   };
 
   const handleNewRoom = async action => {
@@ -94,7 +101,12 @@ export default function Dashboard({navigation}) {
   };
 
   return home && home.rooms ? (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{...styles.container, ...styles.containerWithTabs}}>
+      <RoomSelector
+        rooms={rooms}
+        selectedRoom={selectedRoom}
+        setSelectedRoom={setSelectedRoom}
+      />
       <Text>Dashboard {user ? user.name : ''}</Text>
     </SafeAreaView>
   ) : (
@@ -127,6 +139,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#121212',
     alignSelf: 'stretch',
+  },
+
+  containerWithTabs: {
+    justifyContent: 'flex-start',
   },
 
   addButton: {
