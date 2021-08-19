@@ -1,5 +1,11 @@
 import React, {useState, useEffect} from 'react';
-import {SafeAreaView, StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 
@@ -107,7 +113,23 @@ export default function Dashboard({navigation}) {
         selectedRoom={selectedRoom}
         setSelectedRoom={setSelectedRoom}
       />
-      <Text>Dashboard {user ? user.name : ''}</Text>
+
+      {rooms && rooms[selectedRoom] && rooms[selectedRoom].components ? (
+        <ScrollView></ScrollView>
+      ) : (
+        <SafeAreaView style={styles.container}>
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => navigation.navigate('Create Component')}>
+            <Text style={styles.addButtonText}>+</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.emptyScreenMessage}>
+            To start using this app, you need to add components. Just click the
+            button above!
+          </Text>
+        </SafeAreaView>
+      )}
     </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.container}>
@@ -118,8 +140,8 @@ export default function Dashboard({navigation}) {
       </TouchableOpacity>
 
       <Text style={styles.emptyScreenMessage}>
-        To start using this app, you need to add rooms and components. Just
-        click the button above!
+        To start using this app, you need to add rooms. Just click the button
+        above!
       </Text>
 
       <RoomModal
