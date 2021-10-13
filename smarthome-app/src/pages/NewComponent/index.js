@@ -10,6 +10,7 @@ import {
   Platform,
   PermissionsAndroid,
   View,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-remix-icon';
 import database from '@react-native-firebase/database';
@@ -40,6 +41,8 @@ export default function NewComponent() {
 
   const startScan = async () => {
     if (!isScanning) {
+      setDevicesList([]);
+
       try {
         await BleManager.scan([], 15, false);
         setIsScanning(true);
@@ -137,15 +140,9 @@ export default function NewComponent() {
     <SafeAreaView style={styles.container}>
       <View style={styles.contentRow}>
         <Text style={styles.text}>Choose a device:</Text>
-
-        {isScanning ? null : (
-          <TouchableOpacity activeOpacity={0.75} onPress={() => startScan()}>
-            <Text style={[styles.text, styles.scanButton]}>Click to scan</Text>
-          </TouchableOpacity>
-        )}
       </View>
 
-      {devicesList && (
+      {devicesList.length > 0 ? (
         <FlatList
           style={styles.devicesContainer}
           data={devicesList}
@@ -168,9 +165,29 @@ export default function NewComponent() {
             </TouchableOpacity>
           )}
         />
+      ) : (
+        <View style={styles.loadingContainer}>
+          {isScanning ? (
+            <Image
+              style={styles.animation}
+              source={require('../../assets/loading.gif')}
+            />
+          ) : (
+            <Text style={[styles.text, styles.noComponents]}>
+              No components were found!
+              <TouchableOpacity
+                activeOpacity={0.75}
+                onPress={() => startScan()}>
+                <Text style={[styles.text, styles.scanButton]}>
+                  Click to scan again.
+                </Text>
+              </TouchableOpacity>
+            </Text>
+          )}
+        </View>
       )}
 
-      <FlatList
+      {/* <FlatList
         data={componentTypes}
         keyExtractor={type => type.type}
         horizontal
@@ -191,7 +208,7 @@ export default function NewComponent() {
             />
           </TouchableOpacity>
         )}
-      />
+      /> */}
     </SafeAreaView>
   );
 }
@@ -235,6 +252,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Manrope',
   },
 
+  loadingContainer: {
+    width: '100%',
+    minHeight: 50,
+    flexGrow: 0,
+    alignItems: 'center',
+    padding: 24,
+  },
+
   devicesContainer: {
     width: '100%',
     minHeight: 50,
@@ -271,8 +296,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  noComponents: {
+    textAlign: 'center',
+  },
+
   scanButton: {
-    fontSize: 14,
     opacity: 0.75,
+    textDecorationLine: 'underline',
+  },
+
+  animation: {
+    height: 50,
+    width: 50,
   },
 });
