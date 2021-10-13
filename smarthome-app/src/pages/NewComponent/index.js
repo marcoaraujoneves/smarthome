@@ -34,7 +34,7 @@ const componentTypes = [
 
 export default function NewComponent() {
   const devices = new Map();
-  const [selectedType, setSelectedType] = useState(componentTypes[0].type);
+  const [selectedType, setSelectedType] = useState('');
   const [selectedDevice, setSelectedDevice] = useState();
   const [isScanning, setIsScanning] = useState(false);
   const [devicesList, setDevicesList] = useState([]);
@@ -42,6 +42,8 @@ export default function NewComponent() {
   const startScan = async () => {
     if (!isScanning) {
       setDevicesList([]);
+      setSelectedDevice(null);
+      setSelectedType('');
 
       try {
         await BleManager.scan([], 15, false);
@@ -136,6 +138,19 @@ export default function NewComponent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (selectedDevice && selectedDevice.name) {
+      const componentTypeName = selectedDevice.name.replace('SmartHome: ', '');
+      const componentType = componentTypes.find(
+        type => type.type === componentTypeName.toLowerCase(),
+      );
+
+      if (componentType) {
+        setSelectedType(componentType.type);
+      }
+    }
+  }, [selectedDevice]);
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.contentRow}>
@@ -187,28 +202,36 @@ export default function NewComponent() {
         </View>
       )}
 
-      {/* <FlatList
-        data={componentTypes}
-        keyExtractor={type => type.type}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            style={[
-              styles.button,
-              selectedType === item.type ? styles.buttonActive : null,
-            ]}
-            key={item.type}
-            activeOpacity={1}
-            onPress={() => setSelectedType(item.type)}>
-            <Icon
-              name={item.icon}
-              size="36"
-              color={selectedType === item.type ? '#fff' : '#555'}
-            />
-          </TouchableOpacity>
-        )}
-      /> */}
+      {selectedType ? (
+        <>
+          <View style={styles.contentRow}>
+            <Text style={styles.text}>Component type:</Text>
+          </View>
+          <FlatList
+            data={componentTypes}
+            keyExtractor={type => type.type}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.typesList}
+            renderItem={({item}) => (
+              <View
+                style={[
+                  styles.icon,
+                  selectedType === item.type ? styles.iconActive : null,
+                ]}
+                key={item.type}
+                activeOpacity={1}
+                onPress={() => setSelectedType(item.type)}>
+                <Icon
+                  name={item.icon}
+                  size="36"
+                  color={selectedType === item.type ? '#fff' : '#555'}
+                />
+              </View>
+            )}
+          />
+        </>
+      ) : null}
     </SafeAreaView>
   );
 }
@@ -226,13 +249,19 @@ const styles = StyleSheet.create({
 
   contentRow: {
     marginHorizontal: 17,
+    marginBottom: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     width: '100%',
   },
 
-  button: {
+  typesList: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+
+  icon: {
     marginRight: 16,
     height: 70,
     padding: 16,
@@ -242,7 +271,7 @@ const styles = StyleSheet.create({
     borderColor: '#343434',
   },
 
-  buttonActive: {
+  iconActive: {
     borderColor: '#FFFFFF',
   },
 
@@ -267,7 +296,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#232323',
     borderRadius: 4,
     marginHorizontal: 16,
-    marginTop: 16,
     marginBottom: 40,
   },
 
