@@ -74,13 +74,18 @@ export default function NewComponent() {
   };
 
   const handleDiscoverDevice = device => {
-    console.log(device);
-    if (!device.name) {
-      device.name = 'NO NAME';
-    }
+    const deviceOnListResult = devicesList.find(
+      deviceOnList => device.id === deviceOnList.id,
+    );
 
-    devices.set(device.id, device);
-    setDevicesList(Array.from(devices.values()));
+    if (
+      !deviceOnListResult &&
+      device.name &&
+      device.name.includes('SmartHome:')
+    ) {
+      devices.set(device.id, device);
+      setDevicesList(Array.from(devices.values()));
+    }
   };
 
   useEffect(() => {
@@ -157,7 +162,6 @@ export default function NewComponent() {
               activeOpacity={1}
               onPress={() => {
                 setSelectedDevice(item);
-                console.log(devicesList);
               }}>
               <Text style={styles.deviceName}>{item.name}</Text>
               <Text style={styles.deviceId}>({item.id})</Text>
