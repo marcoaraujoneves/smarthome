@@ -11,6 +11,7 @@ import {
   PermissionsAndroid,
   View,
   Image,
+  TextInput,
 } from 'react-native';
 import Icon from 'react-native-remix-icon';
 import database from '@react-native-firebase/database';
@@ -38,6 +39,8 @@ export default function NewComponent() {
   const [selectedDevice, setSelectedDevice] = useState();
   const [isScanning, setIsScanning] = useState(false);
   const [devicesList, setDevicesList] = useState([]);
+  const [ssid, setSsid] = useState('');
+  const [password, setPassword] = useState('');
 
   const startScan = async () => {
     if (!isScanning) {
@@ -207,29 +210,69 @@ export default function NewComponent() {
           <View style={styles.contentRow}>
             <Text style={styles.text}>Component type:</Text>
           </View>
-          <FlatList
-            data={componentTypes}
-            keyExtractor={type => type.type}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.typesList}
-            renderItem={({item}) => (
-              <View
-                style={[
-                  styles.icon,
-                  selectedType === item.type ? styles.iconActive : null,
-                ]}
-                key={item.type}
-                activeOpacity={1}
-                onPress={() => setSelectedType(item.type)}>
-                <Icon
-                  name={item.icon}
-                  size="36"
-                  color={selectedType === item.type ? '#fff' : '#555'}
-                />
-              </View>
-            )}
+          <View style={styles.componentTypesWrapper}>
+            <FlatList
+              data={componentTypes}
+              keyExtractor={type => type.type}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.typesList}
+              renderItem={({item}) => (
+                <View
+                  style={[
+                    styles.icon,
+                    selectedType === item.type ? styles.iconActive : null,
+                  ]}
+                  key={item.type}
+                  activeOpacity={1}
+                  onPress={() => setSelectedType(item.type)}>
+                  <Icon
+                    name={item.icon}
+                    size="36"
+                    color={selectedType === item.type ? '#fff' : '#555'}
+                  />
+                </View>
+              )}
+            />
+          </View>
+        </>
+      ) : null}
+
+      {selectedDevice ? (
+        <>
+          <View style={styles.contentRow}>
+            <Text style={styles.text}>Connect it to the Wi-Fi network:</Text>
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Type your network name"
+            placeholderTextColor="#868686"
+            keyboardType="default"
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={ssid}
+            onChangeText={setSsid}
           />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Type your network password"
+            placeholderTextColor="#868686"
+            keyboardType="default"
+            secureTextEntry={true}
+            autoCapitalize="none"
+            autoCorrect={false}
+            value={password}
+            onChangeText={setPassword}
+          />
+
+          <TouchableOpacity
+            style={styles.connectButton}
+            disabled={!ssid || !password}
+            onPress={() => {}}>
+            <Text style={styles.connectButtonText}> Connect </Text>
+          </TouchableOpacity>
         </>
       ) : null}
     </SafeAreaView>
@@ -256,8 +299,13 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
+  componentTypesWrapper: {
+    height: 70,
+    marginBottom: 40,
+  },
+
   typesList: {
-    flex: 1,
+    width: '100%',
     justifyContent: 'flex-start',
   },
 
@@ -336,5 +384,36 @@ const styles = StyleSheet.create({
   animation: {
     height: 50,
     width: 50,
+  },
+
+  input: {
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderColor: '#486581',
+    color: '#FFFFFF',
+    fontSize: 16,
+    padding: 16,
+    height: 48,
+    width: '100%',
+    borderRadius: 4,
+    marginBottom: 16,
+    fontFamily: 'Roboto',
+  },
+
+  connectButton: {
+    width: '100%',
+    padding: 12,
+    backgroundColor: '#102A43',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 4,
+    marginTop: 8,
+  },
+
+  connectButtonText: {
+    color: '#FFF',
+    fontWeight: 'bold',
+    fontSize: 16,
+    fontFamily: 'Roboto',
   },
 });
