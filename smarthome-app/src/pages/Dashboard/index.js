@@ -106,7 +106,24 @@ export default function Dashboard({navigation}) {
     }
   };
 
-  return home && home.rooms ? (
+  const componentsListView = <ScrollView></ScrollView>;
+
+  const createComponentView = (
+    <SafeAreaView style={styles.container}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => navigation.navigate('Create Component')}>
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+
+      <Text style={styles.emptyScreenMessage}>
+        To start using this app, you need to add components. Just click the
+        button above!
+      </Text>
+    </SafeAreaView>
+  );
+
+  return !isLoading && home && home.rooms ? (
     <SafeAreaView style={{...styles.container, ...styles.containerWithTabs}}>
       <RoomSelector
         rooms={rooms}
@@ -114,22 +131,9 @@ export default function Dashboard({navigation}) {
         setSelectedRoom={setSelectedRoom}
       />
 
-      {rooms && rooms[selectedRoom] && rooms[selectedRoom].components ? (
-        <ScrollView></ScrollView>
-      ) : (
-        <SafeAreaView style={styles.container}>
-          <TouchableOpacity
-            style={styles.addButton}
-            onPress={() => navigation.navigate('Create Component')}>
-            <Text style={styles.addButtonText}>+</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.emptyScreenMessage}>
-            To start using this app, you need to add components. Just click the
-            button above!
-          </Text>
-        </SafeAreaView>
-      )}
+      {rooms && rooms[selectedRoom] && rooms[selectedRoom].components
+        ? componentsListView
+        : createComponentView}
     </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.container}>
@@ -149,7 +153,8 @@ export default function Dashboard({navigation}) {
         setIsVisible={setShowRoomModal}
         handleNewRoom={handleNewRoom}
       />
-      <LoadingModal isVisible={isLoading} setIsVisible={setShowRoomModal} />
+
+      <LoadingModal isVisible={isLoading} />
     </SafeAreaView>
   );
 }
