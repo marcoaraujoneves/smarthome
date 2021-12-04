@@ -230,9 +230,7 @@ export default function NewComponent() {
                     styles.icon,
                     selectedType === item.type ? styles.iconActive : null,
                   ]}
-                  key={item.type}
-                  activeOpacity={1}
-                  onPress={() => setSelectedType(item.type)}>
+                  key={item.type}>
                   <Icon
                     name={item.icon}
                     size="36"
