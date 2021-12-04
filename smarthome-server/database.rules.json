@@ -1,0 +1,19 @@
+{
+  "rules": {
+    "home": {
+      "$homeId": {
+        ".read": "data.child('owner').val() == auth.uid"
+      }
+    },
+    "room": {
+      "$roomId": {
+        ".read": "root.child('home').child(data.child('home').val()).child('owner').val() == auth.uid"
+      }
+    },
+    "user": {
+      "$userId": {
+        ".read": "$userId == auth.uid"
+      }
+    }
+  }
+}

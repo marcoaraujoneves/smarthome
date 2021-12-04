@@ -1,0 +1,29 @@
+function isAuthenticatedUser(userId) {
+  return userId == auth.uid
+}
+
+function userIsHomeOwner(ownerId) {
+  return ownerId == auth.uid
+}
+
+function userIsRoomOwner(homeId) {
+  return (userIsHomeOwner(prior(root).home[homeId].owner))
+}
+
+path /home {
+  /{homeId} {
+    read() { userIsHomeOwner(this.owner) }
+  }
+}
+
+path /room {
+  /{roomId} {
+    read() { userIsRoomOwner(this.home) }
+  }
+}
+
+path /user {
+  /{userId} {
+    read() { isAuthenticatedUser(userId) }
+  }
+}
