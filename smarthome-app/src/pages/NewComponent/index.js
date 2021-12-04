@@ -44,6 +44,7 @@ export default function NewComponent() {
 
   const startScan = async () => {
     if (!isScanning) {
+      devices.clear();
       setDevicesList([]);
       setSelectedDevice(null);
       setSelectedType('');
@@ -158,6 +159,12 @@ export default function NewComponent() {
     <SafeAreaView style={styles.container}>
       <View style={styles.contentRow}>
         <Text style={styles.text}>Choose a device:</Text>
+
+        {isScanning || devicesList.length === 0 ? null : (
+          <TouchableOpacity activeOpacity={0.75} onPress={() => startScan()}>
+            <Text style={[styles.text, styles.scanButton]}>Click to scan</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {devicesList.length > 0 ? (
