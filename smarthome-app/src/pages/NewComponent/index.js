@@ -34,7 +34,6 @@ const componentTypes = [
 ];
 
 export default function NewComponent() {
-  const devices = new Map();
   const [selectedType, setSelectedType] = useState('');
   const [selectedDevice, setSelectedDevice] = useState();
   const [isScanning, setIsScanning] = useState(false);
@@ -42,15 +41,20 @@ export default function NewComponent() {
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
 
+  const getDeviceOnList = deviceId => {
+    return devicesList.find(({id}) => {
+      return deviceId === id;
+    });
+  };
+
   const startScan = async () => {
     if (!isScanning) {
-      devices.clear();
       setDevicesList([]);
       setSelectedDevice(null);
       setSelectedType('');
 
       try {
-        await BleManager.scan([], 15, false);
+        await BleManager.scan([], 10, false);
         setIsScanning(true);
       } catch (error) {
         console.error(error);
@@ -62,38 +66,53 @@ export default function NewComponent() {
     setIsScanning(false);
   };
 
-  const retrieveConnected = async () => {
-    const results = await BleManager.getConnectedPeripherals([]);
-    for (let device of results) {
-      device.connected = true;
-      devices.set(device.id, device);
-      setDevicesList(Array.from(devices.values()));
-    }
-  };
-
-  const handleDisconnectedDevice = data => {
-    let device = devices.get(data.peripheral);
-
-    if (device) {
-      device.connected = false;
-
-      devices.set(device.id, device);
-      setDevicesList(Array.from(devices.values()));
-    }
+  const handleDisconnectedDevice = ({peripheral: deviceId}) => {
+    setDevicesList(devicesList.filter(({id}) => deviceId !== id));
   };
 
   const handleDiscoverDevice = device => {
-    const deviceOnListResult = devicesList.find(
-      deviceOnList => device.id === deviceOnList.id,
-    );
-
     if (
-      !deviceOnListResult &&
-      device.name &&
-      device.name.includes('SmartHome:')
+      !device.name ||
+      !device.name.includes('SmartHome:') ||
+      !device.advertising.isConnectable
     ) {
-      devices.set(device.id, device);
-      setDevicesList(Array.from(devices.values()));
+      return;
+    }
+
+    const deviceOnList = getDeviceOnList(device.id);
+
+    if (!deviceOnList) {
+      setDevicesList([...devicesList, device]);
+    }
+  };
+
+  const connectToDevice = async device => {
+    await BleManager.connect(device.id);
+
+    const deviceOnList = getDeviceOnList(device.id);
+
+    if (deviceOnList) {
+      const deviceData = await BleManager.retrieveServices(device.id);
+
+      const serviceUUID = deviceData.advertising.serviceUUIDs[0];
+      const characteristicUUID = deviceData.characteristics.find(
+        characteristic => serviceUUID === characteristic.service,
+      ).characteristic;
+
+      setDevicesList(
+        devicesList.map(item => {
+          if (item.id === device.id) {
+            return {
+              ...item,
+              connected: true,
+              serviceUUID,
+              characteristicUUID,
+            };
+          } else {
+            return item;
+          }
+        }),
+      );
     }
   };
 
@@ -184,6 +203,7 @@ export default function NewComponent() {
               activeOpacity={1}
               onPress={() => {
                 setSelectedDevice(item);
+                connectToDevice(item);
               }}>
               <Text style={styles.deviceName}>{item.name}</Text>
               <Text style={styles.deviceId}>({item.id})</Text>
@@ -212,7 +232,7 @@ export default function NewComponent() {
         </View>
       )}
 
-      {selectedType ? (
+      {devicesList.length > 0 && selectedDevice && selectedType ? (
         <>
           <View style={styles.contentRow}>
             <Text style={styles.text}>Component type:</Text>
@@ -243,7 +263,7 @@ export default function NewComponent() {
         </>
       ) : null}
 
-      {selectedDevice ? (
+      {devicesList.length > 0 && selectedDevice ? (
         <>
           <View style={styles.contentRow}>
             <Text style={styles.text}>Connect it to the Wi-Fi network:</Text>
