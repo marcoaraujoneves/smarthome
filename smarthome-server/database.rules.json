@@ -10,6 +10,12 @@
         ".read": "root.child('home').child(data.child('home').val()).child('owner').val() == auth.uid"
       }
     },
+    "component": {
+      "$componentId": {
+        ".read": "root.child('home').child(root.child('room').child(data.child('room').val()).child('home').val()).child('owner').val() == auth.uid",
+        ".write": "true"
+      }
+    },
     "user": {
       "$userId": {
         ".read": "$userId == auth.uid"
