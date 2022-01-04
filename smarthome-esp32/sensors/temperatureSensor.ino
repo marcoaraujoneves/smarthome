@@ -5,10 +5,8 @@
 #include <Firebase_ESP_Client.h>
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
+#include "secrets.h"
 
-// Firebase constants
-#define API_KEY "ENTER_YOUR_DATA"
-#define DATABASE_URL "ENTER_YOUR_DATA"
 // Sensor constants
 #define adcVoltageReference 5000.0
 #define adcResolution 4096.0
@@ -20,6 +18,8 @@ FirebaseData firebaseDataObject;
 FirebaseAuth auth;
 FirebaseConfig config;
 bool signupOK = false;
+
+String componentId = "";
 
 bool connectToWiFi()
 {
@@ -105,7 +105,7 @@ void loop()
   {
     float temperature = getTemperature();
 
-    if (Firebase.RTDB.setFloat(&firebaseDataObject, "test/temperature", temperature))
+    if (Firebase.RTDB.setFloat(&firebaseDataObject, "component/" + componentId + "/reads", temperature))
     {
       Serial.println("PASSED");
       Serial.println("PATH: " + firebaseDataObject.dataPath());
