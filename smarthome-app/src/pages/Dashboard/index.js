@@ -1,11 +1,14 @@
 import React, {useState, useEffect} from 'react';
 import {
+  FlatList,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
+  View,
 } from 'react-native';
+import Icon from 'react-native-remix-icon';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 
@@ -13,10 +16,17 @@ import RoomModal from '../../components/RoomModal';
 import LoadingModal from '../../components/LoadingModal';
 import RoomSelector from '../../components/RoomSelector';
 
+const componentNames = {
+  temperature: 'ri-temp-cold-line',
+  brightness: 'ri-sun-line',
+  umidity: 'ri-drop-line',
+};
+
 export default function Dashboard({navigation}) {
   const [user, setUser] = useState({});
   const [home, setHome] = useState({});
   const [rooms, setRooms] = useState({});
+  const [components, setComponents] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -106,7 +116,66 @@ export default function Dashboard({navigation}) {
     }
   };
 
-  const componentsListView = <ScrollView></ScrollView>;
+  const getComponentMargin = id => {
+    const componentIndex = rooms[selectedRoom].components.findIndex(
+      componentId => componentId === id,
+    );
+
+    let marginLeft = 0;
+
+    if (componentIndex % 2 === 1) {
+      marginLeft = 39;
+    }
+
+    return {marginLeft};
+  };
+
+  useEffect(() => {
+    const loadComponents = async () => {
+      if (
+        rooms &&
+        selectedRoom &&
+        rooms[selectedRoom] &&
+        rooms[selectedRoom].components
+      ) {
+        const newComponentsArray = [];
+
+        for (let componentId of rooms[selectedRoom].components) {
+          const componentSnap = await database()
+            .ref(`/component/${componentId}`)
+            .once('value');
+
+          if (componentSnap.exists()) {
+            newComponentsArray.push({...componentSnap.val(), id: componentId});
+          }
+        }
+
+        setComponents(newComponentsArray);
+      }
+    };
+
+    loadComponents();
+  }, [selectedRoom, rooms]);
+
+  const componentsListView = (
+    <FlatList
+      numColumns={2}
+      style={styles.componentsContainer}
+      contentContainerStyle={styles.componentsContainerStyle}
+      data={components}
+      keyExtractor={item => item.id}
+      renderItem={({item}) => (
+        <View
+          style={[styles.component, getComponentMargin(item.id)]}
+          key={item.id}>
+          <Icon name={componentNames[item.type]} size="70" color="#fff" />
+          <Text style={styles.componentMeasure}>
+            {item.reads || '-'} {item.unit || ''}
+          </Text>
+        </View>
+      )}
+    />
+  );
 
   const createComponentView = (
     <SafeAreaView style={styles.container}>
@@ -196,5 +265,32 @@ const styles = StyleSheet.create({
     fontFamily: 'Roboto',
     lineHeight: 20,
     textAlign: 'center',
+  },
+
+  componentsContainer: {},
+
+  componentsContainerStyle: {
+    flex: 1,
+    width: 379,
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+  },
+
+  component: {
+    backgroundColor: '#2e2e2e',
+    borderRadius: 6,
+    height: 170,
+    width: 170,
+    marginTop: 39,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  componentMeasure: {
+    marginTop: 30,
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#fff',
+    fontFamily: 'Roboto',
   },
 });
