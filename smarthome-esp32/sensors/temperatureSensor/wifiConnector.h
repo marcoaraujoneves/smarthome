@@ -24,7 +24,6 @@ BLECharacteristic *pCharacteristic;
 BLEAdvertising *pAdvertising;
 BLEService *pService;
 BLEServer *pServer;
-bool isBLEInitialized = false;
 
 class CustomCharacteristicCallbacks : public BLECharacteristicCallbacks
 {
@@ -92,9 +91,7 @@ class CustomCharacteristicCallbacks : public BLECharacteristicCallbacks
 
 void finishBLE()
 {
-  pAdvertising->stop();
-
-  isBLEInitialized = false;
+  BLEDevice::deinit(false);
 }
 
 void initBLE()
@@ -118,8 +115,6 @@ void initBLE()
 
   pAdvertising = pServer->getAdvertising();
   pAdvertising->start();
-
-  isBLEInitialized = true;
 }
 
 void getStoredCredentials()

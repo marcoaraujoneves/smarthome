@@ -122,7 +122,7 @@ void loop()
   case WAITING:
     Serial.println("WAITING");
 
-    if (!isBLEInitialized)
+    if (BLEDevice::getInitialized() == false)
     {
       initBLE();
       delay(2000);
@@ -158,7 +158,7 @@ void loop()
 
     saveCredentials();
 
-    if (isBLEInitialized)
+    if (BLEDevice::getInitialized() == true)
     {
       finishBLE();
     }
