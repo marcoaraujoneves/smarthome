@@ -25,6 +25,20 @@ BLEAdvertising *pAdvertising;
 BLEService *pService;
 BLEServer *pServer;
 
+class CustomServerCallbacks : public BLEServerCallbacks
+{
+  void onConnect(BLEServer *pServer)
+  {
+    Serial.println("BLE client connected");
+    pAdvertising->stop();
+  };
+
+  void onDisconnect(BLEServer *pServer)
+  {
+    Serial.println("BLE client disconnected");
+    pAdvertising->start();
+  }
+};
 class CustomCharacteristicCallbacks : public BLECharacteristicCallbacks
 {
   void onWrite(BLECharacteristic *pCharacteristic)
@@ -100,8 +114,7 @@ void initBLE()
   BLEDevice::setPower(ESP_PWR_LVL_P7);
 
   pServer = BLEDevice::createServer();
-
-  // pServer->setCallbacks(new CustomServerCallbacks());
+  pServer->setCallbacks(new CustomServerCallbacks());
 
   pService = pServer->createService(BLEUUID(SERVICE_UUID), 20);
 
