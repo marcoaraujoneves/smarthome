@@ -168,9 +168,8 @@ bool connectToWiFi(String selectedSSID, String selectedPassword)
   WiFi.begin(selectedSSID.c_str(), selectedPassword.c_str());
   Serial.println("Connecting to Wi-Fi ...");
 
-  // TODO: Failed connection is not handled properly
   int tries = 0;
-  while (WiFi.status() != WL_CONNECTED || tries <= 5)
+  while (WiFi.status() != WL_CONNECTED && tries <= 15)
   {
     tries++;
     delay(300);
