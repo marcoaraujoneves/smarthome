@@ -157,6 +157,7 @@ void loop()
     Serial.println("SUCCESS");
 
     saveCredentials();
+    delay(5000);
 
     if (BLEDevice::getInitialized() == true)
     {

@@ -79,16 +79,23 @@ class CustomCharacteristicCallbacks : public BLECharacteristicCallbacks
     String response;
 
     JsonObject &jsonOut = jsonBuffer.createObject();
-    JsonArray &ssids = jsonOut.createNestedArray("ssids");
-
     jsonOut["key"] = COMPONENT_ID;
-    jsonOut["error"] = connectionError;
 
-    for (int i = 0; i < 20; i++)
+    if (WiFi.status() == WL_CONNECTED)
     {
-      if (availableNetworks[i] != "")
+      jsonOut["connected"] = true;
+    }
+    else
+    {
+      JsonArray &ssids = jsonOut.createNestedArray("ssids");
+      jsonOut["error"] = connectionError;
+
+      for (int i = 0; i < 20; i++)
       {
-        ssids.add(availableNetworks[i]);
+        if (availableNetworks[i] != "")
+        {
+          ssids.add(availableNetworks[i]);
+        }
       }
     }
 
