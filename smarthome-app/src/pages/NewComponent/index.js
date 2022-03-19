@@ -48,6 +48,64 @@ export default function NewComponent() {
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
 
+  useEffect(() => {
+    BleManager.start({showAlert: false});
+
+    bleManagerEmitter.addListener('BleManagerStopScan', handleStopScan);
+    bleManagerEmitter.addListener(
+      'BleManagerDiscoverPeripheral',
+      handleDiscoverDevice,
+    );
+    bleManagerEmitter.addListener(
+      'BleManagerDisconnectPeripheral',
+      handleDisconnectedDevice,
+    );
+
+    if (Platform.OS === 'android' && Platform.Version >= 23) {
+      PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      ).then(hasPermission => {
+        if (hasPermission) {
+          startScan();
+        } else {
+          PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          ).then(result => {
+            if (result) {
+              startScan();
+            }
+          });
+        }
+      });
+    }
+
+    return () => {
+      bleManagerEmitter.removeListener('BleManagerStopScan', handleStopScan);
+      bleManagerEmitter.removeListener(
+        'BleManagerDiscoverPeripheral',
+        handleDiscoverDevice,
+      );
+      bleManagerEmitter.removeListener(
+        'BleManagerDisconnectPeripheral',
+        handleDisconnectedDevice,
+      );
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (selectedDevice && selectedDevice.name) {
+      const componentTypeName = selectedDevice.name.replace('SmartHome: ', '');
+      const componentType = componentTypes.find(
+        type => type.type === componentTypeName.toLowerCase(),
+      );
+
+      if (componentType) {
+        setSelectedType(componentType.type);
+      }
+    }
+  }, [selectedDevice]);
+
   const getDeviceOnList = deviceId => {
     return devicesList.find(({id}) => {
       return deviceId === id;
@@ -204,64 +262,6 @@ export default function NewComponent() {
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    BleManager.start({showAlert: false});
-
-    bleManagerEmitter.addListener('BleManagerStopScan', handleStopScan);
-    bleManagerEmitter.addListener(
-      'BleManagerDiscoverPeripheral',
-      handleDiscoverDevice,
-    );
-    bleManagerEmitter.addListener(
-      'BleManagerDisconnectPeripheral',
-      handleDisconnectedDevice,
-    );
-
-    if (Platform.OS === 'android' && Platform.Version >= 23) {
-      PermissionsAndroid.check(
-        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      ).then(hasPermission => {
-        if (hasPermission) {
-          startScan();
-        } else {
-          PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          ).then(result => {
-            if (result) {
-              startScan();
-            }
-          });
-        }
-      });
-    }
-
-    return () => {
-      bleManagerEmitter.removeListener('BleManagerStopScan', handleStopScan);
-      bleManagerEmitter.removeListener(
-        'BleManagerDiscoverPeripheral',
-        handleDiscoverDevice,
-      );
-      bleManagerEmitter.removeListener(
-        'BleManagerDisconnectPeripheral',
-        handleDisconnectedDevice,
-      );
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (selectedDevice && selectedDevice.name) {
-      const componentTypeName = selectedDevice.name.replace('SmartHome: ', '');
-      const componentType = componentTypes.find(
-        type => type.type === componentTypeName.toLowerCase(),
-      );
-
-      if (componentType) {
-        setSelectedType(componentType.type);
-      }
-    }
-  }, [selectedDevice]);
 
   return (
     <SafeAreaView style={styles.container}>
