@@ -13,9 +13,15 @@ import {
   Image,
   TextInput,
 } from 'react-native';
+import {Picker} from '@react-native-picker/picker';
 import Icon from 'react-native-remix-icon';
-import database from '@react-native-firebase/database';
 import BleManager from 'react-native-ble-manager';
+import {Buffer} from 'buffer';
+import {stringToBytes} from 'convert-string';
+import database from '@react-native-firebase/database';
+
+const boardService = '5617df76-39f3-44b0-aa1b-c8e71e4caeba';
+const boardCharacteristic = '564c9b11-b549-4af0-9675-75225dba6db2';
 
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
@@ -38,6 +44,7 @@ export default function NewComponent() {
   const [selectedDevice, setSelectedDevice] = useState();
   const [isScanning, setIsScanning] = useState(false);
   const [devicesList, setDevicesList] = useState([]);
+  const [availableSsids, setAvailableSsids] = useState([]);
   const [ssid, setSsid] = useState('');
   const [password, setPassword] = useState('');
 
@@ -88,31 +95,113 @@ export default function NewComponent() {
 
   const connectToDevice = async device => {
     await BleManager.connect(device.id);
+    const deviceData = await BleManager.retrieveServices(device.id);
 
     const deviceOnList = getDeviceOnList(device.id);
 
-    if (deviceOnList) {
-      const deviceData = await BleManager.retrieveServices(device.id);
+    const hasService = deviceData.services.find(
+      service => service.uuid === boardService,
+    );
 
-      const serviceUUID = deviceData.advertising.serviceUUIDs[0];
-      const characteristicUUID = deviceData.characteristics.find(
-        characteristic => serviceUUID === characteristic.service,
-      ).characteristic;
+    const hasCharacteristic = deviceData.characteristics.find(
+      characteristic => characteristic.characteristic === boardCharacteristic,
+    );
 
+    if (deviceOnList && hasService && hasCharacteristic) {
       setDevicesList(
         devicesList.map(item => {
           if (item.id === device.id) {
             return {
               ...item,
               connected: true,
-              serviceUUID,
-              characteristicUUID,
             };
           } else {
             return item;
           }
         }),
       );
+
+      readDeviceData(device.id);
+    }
+  };
+
+  const readDeviceData = async deviceId => {
+    try {
+      const readData = await BleManager.read(
+        deviceId,
+        boardService,
+        boardCharacteristic,
+      );
+
+      const buffer = Buffer.from(readData);
+      const response = JSON.parse(buffer.toString().replace(',]', ']'));
+      const {error, ssids} = response || {};
+
+      if (error) {
+        throw new Error('Error loading available networks.');
+      } else if (!ssids || !ssids.length) {
+        throw new Error('There is no available networks.');
+      }
+
+      setAvailableSsids(ssids);
+      setSsid(ssids[0]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const writeDeviceData = async () => {
+    const deviceId = selectedDevice.id;
+    const data = stringToBytes(JSON.stringify({ssid, password}));
+
+    try {
+      await BleManager.write(
+        deviceId,
+        boardService,
+        boardCharacteristic,
+        data,
+        512,
+      );
+
+      setTimeout(checkSuccessfulConnection, 5000);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const checkSuccessfulConnection = async () => {
+    const deviceId = selectedDevice.id;
+
+    try {
+      let intervalId, componentId;
+      let tries = 0;
+
+      const checkSuccess = async () => {
+        const readData = await BleManager.read(
+          deviceId,
+          boardService,
+          boardCharacteristic,
+        );
+
+        const buffer = Buffer.from(readData);
+        const response = JSON.parse(buffer.toString().replace(',]', ']'));
+        const {key, connected} = response || {};
+
+        tries += 1;
+
+        if (connected) {
+          componentId = key;
+          console.log('success', componentId);
+          clearInterval(intervalId);
+        } else if (tries > 5) {
+          clearInterval(intervalId);
+          throw new Error('Error connecting to the selected network.');
+        }
+      };
+
+      intervalId = setInterval(checkSuccess, 2000);
+    } catch (error) {
+      console.log(error);
     }
   };
 
@@ -263,22 +352,31 @@ export default function NewComponent() {
         </>
       ) : null}
 
-      {devicesList.length > 0 && selectedDevice ? (
+      {devicesList.length > 0 &&
+      selectedDevice &&
+      availableSsids.length &&
+      ssid ? (
         <>
           <View style={styles.contentRow}>
             <Text style={styles.text}>Connect it to the Wi-Fi network:</Text>
           </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Type your network name"
-            placeholderTextColor="#868686"
-            keyboardType="default"
-            autoCapitalize="none"
-            autoCorrect={false}
-            value={ssid}
-            onChangeText={setSsid}
-          />
+          <View style={styles.pickerWrapper}>
+            <Picker
+              selectedValue={ssid}
+              onValueChange={value => setSsid(value)}
+              style={styles.input}
+              itemStyle={styles.input}>
+              {availableSsids.map(networkName => (
+                <Picker.Item
+                  key={networkName}
+                  label={networkName}
+                  value={networkName}
+                  color="white"
+                />
+              ))}
+            </Picker>
+          </View>
 
           <TextInput
             style={styles.input}
@@ -295,7 +393,7 @@ export default function NewComponent() {
           <TouchableOpacity
             style={styles.connectButton}
             disabled={!ssid || !password}
-            onPress={() => {}}>
+            onPress={writeDeviceData}>
             <Text style={styles.connectButtonText}> Connect </Text>
           </TouchableOpacity>
         </>
@@ -423,6 +521,15 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 16,
     fontFamily: 'Roboto',
+  },
+
+  pickerWrapper: {
+    width: '100%',
+    height: 55,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#486581',
+    borderRadius: 4,
   },
 
   connectButton: {
