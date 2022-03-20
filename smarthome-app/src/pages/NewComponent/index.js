@@ -12,6 +12,7 @@ import {
   View,
   Image,
   TextInput,
+  Alert,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import Icon from 'react-native-remix-icon';
@@ -205,6 +206,13 @@ export default function NewComponent() {
       setSsid(ssids[0]);
     } catch (error) {
       console.log(error);
+
+      Alert.alert('Error', error.message, [
+        {
+          text: 'Try again',
+          onPress: () => {},
+        },
+      ]);
     }
   };
 
@@ -224,6 +232,13 @@ export default function NewComponent() {
       setTimeout(checkSuccessfulConnection, 5000);
     } catch (error) {
       console.log(error);
+
+      Alert.alert('Error writing to device', error.message, [
+        {
+          text: 'Try again',
+          onPress: () => {},
+        },
+      ]);
     }
   };
 
@@ -257,6 +272,15 @@ export default function NewComponent() {
         }
       } catch (error) {
         console.log(error);
+
+        Alert.alert('Error', error.message, [
+          {
+            text: 'Try again',
+            onPress: () => {
+              setPassword('');
+            },
+          },
+        ]);
       }
     };
 
