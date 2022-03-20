@@ -23,6 +23,7 @@ path /home {
 path /room {
   /{roomId} {
     read() { userIsRoomOwner(this.home) }
+    write() { userIsRoomOwner(this.home) }
   }
 }
 

@@ -7,7 +7,8 @@
     },
     "room": {
       "$roomId": {
-        ".read": "root.child('home').child(data.child('home').val()).child('owner').val() == auth.uid"
+        ".read": "root.child('home').child(data.child('home').val()).child('owner').val() == auth.uid",
+        ".write": "root.child('home').child(newData.child('home').val()).child('owner').val() == auth.uid"
       }
     },
     "component": {
