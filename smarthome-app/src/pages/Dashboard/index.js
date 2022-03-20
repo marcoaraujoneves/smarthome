@@ -157,6 +157,14 @@ export default function Dashboard({navigation}) {
     loadComponents();
   }, [selectedRoom, rooms]);
 
+  const getRead = component => {
+    if (typeof component.reads === 'undefined') {
+      return '-';
+    }
+
+    return component.reads;
+  };
+
   const componentsListView = (
     <FlatList
       numColumns={2}
@@ -170,7 +178,7 @@ export default function Dashboard({navigation}) {
           key={item.id}>
           <Icon name={componentNames[item.type]} size="70" color="#fff" />
           <Text style={styles.componentMeasure}>
-            {item.reads || '-'} {item.unit || ''}
+            {getRead(item)} {item.unit || ''}
           </Text>
         </View>
       )}
@@ -181,7 +189,11 @@ export default function Dashboard({navigation}) {
     <SafeAreaView style={styles.container}>
       <TouchableOpacity
         style={styles.addButton}
-        onPress={() => navigation.navigate('Create Component')}>
+        onPress={() =>
+          navigation.navigate('Create Component', {
+            room: selectedRoom,
+          })
+        }>
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
 
