@@ -1,6 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import {
   FlatList,
+  Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -119,9 +120,11 @@ export default function Dashboard({navigation}) {
   };
 
   const getComponentMargin = id => {
-    const componentIndex = rooms[selectedRoom].components.findIndex(
-      componentId => componentId === id,
-    );
+    const roomComponents = rooms[selectedRoom].components;
+
+    const componentIndex = id
+      ? roomComponents.findIndex(componentId => componentId === id)
+      : roomComponents.length;
 
     let marginLeft = 0;
 
@@ -133,6 +136,8 @@ export default function Dashboard({navigation}) {
   };
 
   useEffect(() => {
+    setComponents([]);
+
     const loadComponents = async () => {
       if (
         rooms &&
@@ -172,18 +177,33 @@ export default function Dashboard({navigation}) {
       numColumns={2}
       style={styles.componentsContainer}
       contentContainerStyle={styles.componentsContainerStyle}
-      data={components}
+      data={[
+        ...components,
+        {id: `create-${selectedRoom}-component`, extraButton: true},
+      ]}
       keyExtractor={item => item.id}
-      renderItem={({item}) => (
-        <View
-          style={[styles.component, getComponentMargin(item.id)]}
-          key={item.id}>
-          <Icon name={componentNames[item.type]} size="70" color="#fff" />
-          <Text style={styles.componentMeasure}>
-            {getRead(item)} {item.unit || ''}
-          </Text>
-        </View>
-      )}
+      renderItem={({item}) =>
+        item.extraButton ? (
+          <TouchableOpacity
+            style={[styles.addButtonSmall, getComponentMargin()]}
+            onPress={() =>
+              navigation.navigate('Create Component', {
+                room: selectedRoom,
+              })
+            }>
+            <Text style={styles.addButtonTextSmall}>+</Text>
+          </TouchableOpacity>
+        ) : (
+          <View
+            style={[styles.component, getComponentMargin(item.id)]}
+            key={item.id}>
+            <Icon name={componentNames[item.type]} size="70" color="#fff" />
+            <Text style={styles.componentMeasure}>
+              {getRead(item)} {item.unit || ''}
+            </Text>
+          </View>
+        )
+      }
     />
   );
 
@@ -214,9 +234,18 @@ export default function Dashboard({navigation}) {
         setSelectedRoom={setSelectedRoom}
       />
 
-      {rooms && rooms[selectedRoom] && rooms[selectedRoom].components
-        ? componentsListView
-        : createComponentView}
+      {rooms && rooms[selectedRoom] && rooms[selectedRoom].components ? (
+        components && components.length > 0 ? (
+          componentsListView
+        ) : (
+          <Image
+            style={styles.animation}
+            source={require('../../assets/loading.gif')}
+          />
+        )
+      ) : (
+        createComponentView
+      )}
     </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.container}>
@@ -273,6 +302,24 @@ const styles = StyleSheet.create({
     color: '#486581',
   },
 
+  addButtonSmall: {
+    height: 170,
+    width: 170,
+    borderColor: '#486581',
+    borderStyle: 'dashed',
+    borderWidth: 4,
+    borderRadius: 6,
+    marginTop: 39,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  addButtonTextSmall: {
+    fontSize: 110,
+    lineHeight: 120,
+    color: '#486581',
+  },
+
   emptyScreenMessage: {
     color: '#ffffff',
     fontSize: 16,
@@ -306,5 +353,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#fff',
     fontFamily: 'Roboto',
+  },
+
+  animation: {
+    height: 50,
+    width: 50,
+    marginTop: 39,
   },
 });
