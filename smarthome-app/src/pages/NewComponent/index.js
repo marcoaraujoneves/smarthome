@@ -20,6 +20,7 @@ import BleManager from 'react-native-ble-manager';
 import {Buffer} from 'buffer';
 import {stringToBytes} from 'convert-string';
 import database from '@react-native-firebase/database';
+import LoadingModal from '../../components/LoadingModal';
 
 const boardService = '5617df76-39f3-44b0-aa1b-c8e71e4caeba';
 const boardCharacteristic = '564c9b11-b549-4af0-9675-75225dba6db2';
@@ -40,10 +41,11 @@ const componentTypes = [
   },
 ];
 
-export default function NewComponent() {
+export default function NewComponent({route, navigation}) {
   const [selectedType, setSelectedType] = useState('');
   const [selectedDevice, setSelectedDevice] = useState();
   const [isScanning, setIsScanning] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [devicesList, setDevicesList] = useState([]);
   const [availableSsids, setAvailableSsids] = useState([]);
   const [ssid, setSsid] = useState('');
@@ -245,7 +247,7 @@ export default function NewComponent() {
   const checkSuccessfulConnection = async () => {
     const deviceId = selectedDevice.id;
 
-    let intervalId, componentId;
+    let intervalId;
     let tries = 0;
 
     const checkSuccess = async () => {
@@ -263,8 +265,7 @@ export default function NewComponent() {
         tries += 1;
 
         if (connected) {
-          componentId = key;
-          console.log('success', componentId);
+          handleSuccess(key);
           clearInterval(intervalId);
         } else if (tries > 5) {
           clearInterval(intervalId);
@@ -285,6 +286,29 @@ export default function NewComponent() {
     };
 
     intervalId = setInterval(checkSuccess, 2000);
+  };
+
+  const handleSuccess = async componentId => {
+    setIsCreating(true);
+    const {room} = route.params;
+
+    await database().ref(`/component/${componentId}`).set({
+      name: 'Temperature Sensor',
+      type: 'temperature',
+      unit: 'ºC',
+      room,
+    });
+
+    const roomRef = database().ref(`/room/${room}`);
+    const roomSnap = await roomRef.once('value');
+    const {components} = roomSnap.val();
+
+    await roomRef.update({
+      components: [...(components || []), componentId],
+    });
+
+    navigation.navigate('Dashboard');
+    setIsCreating(false);
   };
 
   const DevicesList = () => (
@@ -428,6 +452,8 @@ export default function NewComponent() {
           </TouchableOpacity>
         </>
       ) : null}
+
+      <LoadingModal isVisible={isCreating} message="Creating component" />
     </SafeAreaView>
   );
 }
