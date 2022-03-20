@@ -46,6 +46,8 @@ export default function NewComponent({route, navigation}) {
   const [selectedDevice, setSelectedDevice] = useState();
   const [isScanning, setIsScanning] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isWriting, setIsWriting] = useState(false);
+  const [isLoadingSSIDs, setIsLoadingSSIDs] = useState(false);
   const [devicesList, setDevicesList] = useState([]);
   const [availableSsids, setAvailableSsids] = useState([]);
   const [ssid, setSsid] = useState('');
@@ -155,6 +157,8 @@ export default function NewComponent({route, navigation}) {
   };
 
   const connectToDevice = async device => {
+    setIsLoadingSSIDs(true);
+
     await BleManager.connect(device.id);
     const deviceData = await BleManager.retrieveServices(device.id);
 
@@ -183,6 +187,8 @@ export default function NewComponent({route, navigation}) {
       );
 
       readDeviceData(device.id);
+    } else {
+      setIsLoadingSSIDs(false);
     }
   };
 
@@ -206,7 +212,9 @@ export default function NewComponent({route, navigation}) {
 
       setAvailableSsids(ssids);
       setSsid(ssids[0]);
+      setIsLoadingSSIDs(false);
     } catch (error) {
+      setIsLoadingSSIDs(false);
       console.log(error);
 
       Alert.alert('Error', error.message, [
@@ -223,6 +231,7 @@ export default function NewComponent({route, navigation}) {
     const data = stringToBytes(JSON.stringify({ssid, password}));
 
     try {
+      setIsWriting(true);
       await BleManager.write(
         deviceId,
         boardService,
@@ -234,6 +243,7 @@ export default function NewComponent({route, navigation}) {
       setTimeout(checkSuccessfulConnection, 5000);
     } catch (error) {
       console.log(error);
+      setIsWriting(false);
 
       Alert.alert('Error writing to device', error.message, [
         {
@@ -272,6 +282,7 @@ export default function NewComponent({route, navigation}) {
           throw new Error('Error connecting to the selected network.');
         }
       } catch (error) {
+        setIsWriting(false);
         console.log(error);
 
         Alert.alert('Error', error.message, [
@@ -289,6 +300,7 @@ export default function NewComponent({route, navigation}) {
   };
 
   const handleSuccess = async componentId => {
+    setIsWriting(false);
     setIsCreating(true);
     const {room} = route.params;
 
@@ -343,7 +355,8 @@ export default function NewComponent({route, navigation}) {
           onPress={() => {
             setSelectedDevice(item);
             connectToDevice(item);
-          }}>
+          }}
+          disabled={isLoadingSSIDs}>
           <Text style={styles.deviceName}>{item.name}</Text>
           <Text style={styles.deviceId}>({item.id})</Text>
         </TouchableOpacity>
@@ -416,15 +429,21 @@ export default function NewComponent({route, navigation}) {
 
       {devicesList.length > 0 ? <DevicesList /> : <LoadingDevicesWrapper />}
 
-      {devicesList.length > 0 && selectedDevice && selectedType ? (
-        <ComponentTypeIndicator />
+      {isLoadingSSIDs ? (
+        <Image
+          style={styles.animation}
+          source={require('../../assets/loading.gif')}
+        />
       ) : null}
 
       {devicesList.length > 0 &&
       selectedDevice &&
+      selectedType &&
       availableSsids.length &&
       ssid ? (
         <>
+          <ComponentTypeIndicator />
+
           <View style={styles.contentRow}>
             <Text style={styles.text}>Connect it to the Wi-Fi network:</Text>
           </View>
@@ -460,9 +479,11 @@ export default function NewComponent({route, navigation}) {
 
           <TouchableOpacity
             style={styles.connectButton}
-            disabled={!ssid || !password}
+            disabled={isWriting || !ssid || !password}
             onPress={writeDeviceData}>
-            <Text style={styles.connectButtonText}> Connect </Text>
+            <Text style={styles.connectButtonText}>
+              {isWriting ? 'Connecting...' : 'Connect'}
+            </Text>
           </TouchableOpacity>
         </>
       ) : null}
