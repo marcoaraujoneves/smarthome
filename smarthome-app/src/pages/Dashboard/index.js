@@ -177,11 +177,8 @@ export default function Dashboard({navigation}) {
       numColumns={2}
       style={styles.componentsContainer}
       contentContainerStyle={styles.componentsContainerStyle}
-      data={[
-        ...components,
-        {id: `create-${selectedRoom}-component`, extraButton: true},
-      ]}
-      keyExtractor={item => item.id}
+      data={[...components, {extraButton: true}]}
+      keyExtractor={item => item.id || `create-${selectedRoom}-component`}
       renderItem={({item}) =>
         item.extraButton ? (
           <TouchableOpacity
