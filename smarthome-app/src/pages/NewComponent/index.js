@@ -263,6 +263,83 @@ export default function NewComponent() {
     }
   };
 
+  const DevicesList = () => (
+    <FlatList
+      style={styles.devicesContainer}
+      data={devicesList}
+      keyExtractor={item => item.id}
+      renderItem={({item}) => (
+        <TouchableOpacity
+          style={[
+            styles.device,
+            selectedDevice && selectedDevice.id === item.id
+              ? styles.deviceActive
+              : null,
+          ]}
+          key={item.id}
+          activeOpacity={1}
+          onPress={() => {
+            setSelectedDevice(item);
+            connectToDevice(item);
+          }}>
+          <Text style={styles.deviceName}>{item.name}</Text>
+          <Text style={styles.deviceId}>({item.id})</Text>
+        </TouchableOpacity>
+      )}
+    />
+  );
+
+  const LoadingDevicesWrapper = () => (
+    <View style={styles.loadingContainer}>
+      {isScanning ? (
+        <Image
+          style={styles.animation}
+          source={require('../../assets/loading.gif')}
+        />
+      ) : (
+        <Text style={[styles.text, styles.noComponents]}>
+          No components were found!
+          <TouchableOpacity activeOpacity={0.75} onPress={() => startScan()}>
+            <Text style={[styles.text, styles.scanButton]}>
+              Click to scan again.
+            </Text>
+          </TouchableOpacity>
+        </Text>
+      )}
+    </View>
+  );
+
+  const ComponentTypeIndicator = () => (
+    <>
+      <View style={styles.contentRow}>
+        <Text style={styles.text}>Component type:</Text>
+      </View>
+      <View style={styles.componentTypesWrapper}>
+        <FlatList
+          data={componentTypes}
+          keyExtractor={type => type.type}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.typesList}
+          renderItem={({item}) => (
+            <View
+              style={[
+                styles.icon,
+                selectedType === item.type ? styles.iconActive : null,
+              ]}
+              key={item.type}>
+              <Icon
+                name={item.icon}
+                size="36"
+                color={selectedType === item.type ? '#fff' : '#555'}
+              />
+            </View>
+          )}
+        />
+      </View>
+    </>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.contentRow}>
@@ -275,81 +352,10 @@ export default function NewComponent() {
         )}
       </View>
 
-      {devicesList.length > 0 ? (
-        <FlatList
-          style={styles.devicesContainer}
-          data={devicesList}
-          keyExtractor={item => item.id}
-          renderItem={({item}) => (
-            <TouchableOpacity
-              style={[
-                styles.device,
-                selectedDevice && selectedDevice.id === item.id
-                  ? styles.deviceActive
-                  : null,
-              ]}
-              key={item.id}
-              activeOpacity={1}
-              onPress={() => {
-                setSelectedDevice(item);
-                connectToDevice(item);
-              }}>
-              <Text style={styles.deviceName}>{item.name}</Text>
-              <Text style={styles.deviceId}>({item.id})</Text>
-            </TouchableOpacity>
-          )}
-        />
-      ) : (
-        <View style={styles.loadingContainer}>
-          {isScanning ? (
-            <Image
-              style={styles.animation}
-              source={require('../../assets/loading.gif')}
-            />
-          ) : (
-            <Text style={[styles.text, styles.noComponents]}>
-              No components were found!
-              <TouchableOpacity
-                activeOpacity={0.75}
-                onPress={() => startScan()}>
-                <Text style={[styles.text, styles.scanButton]}>
-                  Click to scan again.
-                </Text>
-              </TouchableOpacity>
-            </Text>
-          )}
-        </View>
-      )}
+      {devicesList.length > 0 ? <DevicesList /> : <LoadingDevicesWrapper />}
 
       {devicesList.length > 0 && selectedDevice && selectedType ? (
-        <>
-          <View style={styles.contentRow}>
-            <Text style={styles.text}>Component type:</Text>
-          </View>
-          <View style={styles.componentTypesWrapper}>
-            <FlatList
-              data={componentTypes}
-              keyExtractor={type => type.type}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.typesList}
-              renderItem={({item}) => (
-                <View
-                  style={[
-                    styles.icon,
-                    selectedType === item.type ? styles.iconActive : null,
-                  ]}
-                  key={item.type}>
-                  <Icon
-                    name={item.icon}
-                    size="36"
-                    color={selectedType === item.type ? '#fff' : '#555'}
-                  />
-                </View>
-              )}
-            />
-          </View>
-        </>
+        <ComponentTypeIndicator />
       ) : null}
 
       {devicesList.length > 0 &&
