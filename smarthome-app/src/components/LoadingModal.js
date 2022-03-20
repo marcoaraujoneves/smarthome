@@ -1,7 +1,7 @@
 import React from 'react';
-import {StyleSheet, Modal, View, Image} from 'react-native';
+import {StyleSheet, Modal, View, Image, Text} from 'react-native';
 
-export default function LoadingModal({isVisible}) {
+export default function LoadingModal({isVisible, message}) {
   return (
     <Modal
       animationType="none"
@@ -13,6 +13,7 @@ export default function LoadingModal({isVisible}) {
           style={styles.animation}
           source={require('../assets/loading.gif')}
         />
+        {message ? <Text style={styles.loadingMessage}>{message}</Text> : null}
       </View>
     </Modal>
   );
@@ -40,5 +41,12 @@ const styles = StyleSheet.create({
   animation: {
     height: 75,
     width: 75,
+  },
+
+  loadingMessage: {
+    marginTop: 28,
+    color: '#BBB',
+    fontSize: 16,
+    fontFamily: 'Roboto',
   },
 });
