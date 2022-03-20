@@ -60,7 +60,9 @@ export default function Dashboard({navigation}) {
       setIsLoading(false);
     };
 
-    loadUserData();
+    const unsubscribe = navigation.addListener('focus', loadUserData);
+
+    return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation]);
 
