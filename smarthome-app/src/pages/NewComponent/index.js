@@ -230,11 +230,11 @@ export default function NewComponent() {
   const checkSuccessfulConnection = async () => {
     const deviceId = selectedDevice.id;
 
-    try {
-      let intervalId, componentId;
-      let tries = 0;
+    let intervalId, componentId;
+    let tries = 0;
 
-      const checkSuccess = async () => {
+    const checkSuccess = async () => {
+      try {
         const readData = await BleManager.read(
           deviceId,
           boardService,
@@ -255,12 +255,12 @@ export default function NewComponent() {
           clearInterval(intervalId);
           throw new Error('Error connecting to the selected network.');
         }
-      };
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-      intervalId = setInterval(checkSuccess, 2000);
-    } catch (error) {
-      console.log(error);
-    }
+    intervalId = setInterval(checkSuccess, 2000);
   };
 
   const DevicesList = () => (
