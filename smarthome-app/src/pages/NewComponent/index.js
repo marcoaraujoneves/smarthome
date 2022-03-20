@@ -292,23 +292,37 @@ export default function NewComponent({route, navigation}) {
     setIsCreating(true);
     const {room} = route.params;
 
-    await database().ref(`/component/${componentId}`).set({
-      name: 'Temperature Sensor',
-      type: 'temperature',
-      unit: 'ºC',
-      room,
-    });
-
     const roomRef = database().ref(`/room/${room}`);
     const roomSnap = await roomRef.once('value');
     const {components} = roomSnap.val();
 
-    await roomRef.update({
-      components: [...(components || []), componentId],
-    });
+    if (!components || !components.includes(componentId)) {
+      await database().ref(`/component/${componentId}`).set({
+        name: 'Temperature Sensor',
+        type: 'temperature',
+        unit: 'ºC',
+        room,
+      });
 
-    navigation.navigate('Dashboard');
-    setIsCreating(false);
+      await roomRef.update({
+        components: [...(components || []), componentId],
+      });
+
+      setIsCreating(false);
+      navigation.navigate('Dashboard');
+    } else {
+      setIsCreating(false);
+
+      Alert.alert('Error', 'This component was already added to this room.', [
+        {
+          text: 'Cancel',
+          onPress: () => {
+            setIsCreating(false);
+            navigation.navigate('Dashboard');
+          },
+        },
+      ]);
+    }
   };
 
   const DevicesList = () => (
