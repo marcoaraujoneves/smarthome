@@ -1,33 +1,23 @@
 import React, {useState, useEffect} from 'react';
 import {
   FlatList,
-  Image,
   SafeAreaView,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
-import Icon from 'react-native-remix-icon';
 import auth from '@react-native-firebase/auth';
 import database from '@react-native-firebase/database';
 
 import RoomModal from '../../components/RoomModal';
 import LoadingModal from '../../components/LoadingModal';
 import RoomSelector from '../../components/RoomSelector';
-
-const componentNames = {
-  temperature: 'ri-temp-cold-line',
-  brightness: 'ri-sun-line',
-  umidity: 'ri-drop-line',
-};
+import Component from '../../components/Component';
 
 export default function Dashboard({navigation}) {
   const [user, setUser] = useState({});
   const [home, setHome] = useState({});
   const [rooms, setRooms] = useState({});
-  const [components, setComponents] = useState([]);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [showRoomModal, setShowRoomModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +110,10 @@ export default function Dashboard({navigation}) {
   };
 
   const getComponentMargin = id => {
-    const roomComponents = rooms[selectedRoom].components;
+    const roomComponents =
+      selectedRoom && rooms[selectedRoom] && rooms[selectedRoom].components
+        ? rooms[selectedRoom].components
+        : [];
 
     const componentIndex = id
       ? roomComponents.findIndex(componentId => componentId === id)
@@ -135,41 +128,17 @@ export default function Dashboard({navigation}) {
     return {marginLeft};
   };
 
-  useEffect(() => {
-    setComponents([]);
-
-    const loadComponents = async () => {
-      if (
-        rooms &&
-        selectedRoom &&
-        rooms[selectedRoom] &&
-        rooms[selectedRoom].components
-      ) {
-        const newComponentsArray = [];
-
-        for (let componentId of rooms[selectedRoom].components) {
-          const componentSnap = await database()
-            .ref(`/component/${componentId}`)
-            .once('value');
-
-          if (componentSnap.exists()) {
-            newComponentsArray.push({...componentSnap.val(), id: componentId});
-          }
-        }
-
-        setComponents(newComponentsArray);
-      }
-    };
-
-    loadComponents();
-  }, [selectedRoom, rooms]);
-
-  const getRead = component => {
-    if (typeof component.reads === 'undefined') {
-      return '-';
+  const getComponentsListData = () => {
+    if (
+      rooms &&
+      selectedRoom &&
+      rooms[selectedRoom] &&
+      rooms[selectedRoom].components
+    ) {
+      return [...rooms[selectedRoom].components, {extraButton: true}];
     }
 
-    return component.reads;
+    return [];
   };
 
   const componentsListView = (
@@ -177,8 +146,10 @@ export default function Dashboard({navigation}) {
       numColumns={2}
       style={styles.componentsContainer}
       contentContainerStyle={styles.componentsContainerStyle}
-      data={[...components, {extraButton: true}]}
-      keyExtractor={item => item.id || `create-${selectedRoom}-component`}
+      data={getComponentsListData()}
+      keyExtractor={item =>
+        item.extraButton ? `create-${selectedRoom}-component` : item
+      }
       renderItem={({item}) =>
         item.extraButton ? (
           <TouchableOpacity
@@ -191,14 +162,11 @@ export default function Dashboard({navigation}) {
             <Text style={styles.addButtonTextSmall}>+</Text>
           </TouchableOpacity>
         ) : (
-          <View
-            style={[styles.component, getComponentMargin(item.id)]}
-            key={item.id}>
-            <Icon name={componentNames[item.type]} size="70" color="#fff" />
-            <Text style={styles.componentMeasure}>
-              {getRead(item)} {item.unit || ''}
-            </Text>
-          </View>
+          <Component
+            componentId={item}
+            key={item}
+            margin={getComponentMargin(item)}
+          />
         )
       }
     />
@@ -231,18 +199,9 @@ export default function Dashboard({navigation}) {
         setSelectedRoom={setSelectedRoom}
       />
 
-      {rooms && rooms[selectedRoom] && rooms[selectedRoom].components ? (
-        components && components.length > 0 ? (
-          componentsListView
-        ) : (
-          <Image
-            style={styles.animation}
-            source={require('../../assets/loading.gif')}
-          />
-        )
-      ) : (
-        createComponentView
-      )}
+      {selectedRoom && rooms[selectedRoom] && rooms[selectedRoom].components
+        ? componentsListView
+        : createComponentView}
     </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.container}>
@@ -332,29 +291,5 @@ const styles = StyleSheet.create({
     width: 379,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
-  },
-
-  component: {
-    backgroundColor: '#2e2e2e',
-    borderRadius: 6,
-    height: 170,
-    width: 170,
-    marginTop: 39,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  componentMeasure: {
-    marginTop: 30,
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#fff',
-    fontFamily: 'Roboto',
-  },
-
-  animation: {
-    height: 50,
-    width: 50,
-    marginTop: 39,
   },
 });
