@@ -23,7 +23,7 @@ export default function Component({componentId, margin}) {
       }
     });
 
-    return database().ref().off('value', unsubscribe);
+    return () => database().ref().off('value', unsubscribe);
   }, [componentId]);
 
   const getRead = () => {
