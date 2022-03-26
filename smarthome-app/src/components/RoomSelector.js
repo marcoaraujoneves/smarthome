@@ -1,7 +1,13 @@
 import React from 'react';
 import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import Icon from 'react-native-remix-icon';
 
-export default function RoomSelector({rooms, selectedRoom, setSelectedRoom}) {
+export default function RoomSelector({
+  rooms,
+  selectedRoom,
+  setSelectedRoom,
+  setShowRoomModal,
+}) {
   const selectRoom = roomId => {
     if (rooms[roomId]) {
       setSelectedRoom(roomId);
@@ -32,6 +38,16 @@ export default function RoomSelector({rooms, selectedRoom, setSelectedRoom}) {
             </Text>
           </TouchableOpacity>
         )}
+        ListFooterComponent={
+          <TouchableOpacity
+            style={[styles.button, styles.addButton]}
+            onPress={() => setShowRoomModal(true)}>
+            <Icon name="ri-add-fill" size="20" color="#486581" />
+            <Text style={[styles.buttonText, styles.addButtonText]}>
+              Add Room
+            </Text>
+          </TouchableOpacity>
+        }
       />
     </View>
   );
@@ -54,6 +70,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 
+  addButton: {
+    flexDirection: 'row',
+  },
+
   buttonActive: {
     borderStyle: 'solid',
     borderBottomColor: '#FFFFFF',
@@ -64,6 +84,10 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontFamily: 'Manrope',
+  },
+
+  addButtonText: {
+    color: '#486581',
   },
 
   buttonTextActive: {

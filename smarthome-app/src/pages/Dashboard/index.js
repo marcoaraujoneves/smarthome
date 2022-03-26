@@ -197,6 +197,13 @@ export default function Dashboard({navigation}) {
         rooms={rooms}
         selectedRoom={selectedRoom}
         setSelectedRoom={setSelectedRoom}
+        setShowRoomModal={setShowRoomModal}
+      />
+
+      <RoomModal
+        isVisible={showRoomModal}
+        setIsVisible={setShowRoomModal}
+        handleNewRoom={handleNewRoom}
       />
 
       {selectedRoom && rooms[selectedRoom] && rooms[selectedRoom].components
