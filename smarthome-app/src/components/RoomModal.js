@@ -21,7 +21,7 @@ export default function RoomModal({isVisible, setIsVisible, handleNewRoom}) {
     const userSnap = await database().ref(`/user/${userId}`).once('value');
     const {home} = userSnap.val();
 
-    const roomId = database().ref('/room').push({name}).key;
+    const roomId = database().ref('/room').push({name, home}).key;
 
     const roomsSnap = await database().ref(`/home/${home}/rooms`).once('value');
     const rooms = roomsSnap.val() || [];
