@@ -2,7 +2,8 @@
   "rules": {
     "home": {
       "$homeId": {
-        ".read": "data.child('owner').val() == auth.uid"
+        ".read": "data.child('owner').val() == auth.uid",
+        ".write": "newData.child('owner').val() == auth.uid"
       }
     },
     "room": {

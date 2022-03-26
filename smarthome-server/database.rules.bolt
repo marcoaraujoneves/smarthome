@@ -17,6 +17,7 @@ function userIsComponentOwner(roomId) {
 path /home {
   /{homeId} {
     read() { userIsHomeOwner(this.owner) }
+    write() { userIsHomeOwner(this.owner) }
   }
 }
 
