@@ -11,27 +11,42 @@ const deviceTypeIconsMap = {
 
 export default function Device({deviceId, margin}) {
   const [loading, setLoading] = useState(true);
-  const [device, setDevice] = useState({});
+  const [lastRead, setLastRead] = useState(null);
+  const [deviceType, setDeviceType] = useState(null);
+  const [deviceUnit, setDeviceUnit] = useState(null);
 
   useEffect(() => {
     const deviceRef = database().ref(`/device/${deviceId}`);
 
-    const unsubscribe = deviceRef.on('value', deviceSnap => {
-      if (deviceSnap.exists()) {
-        setDevice({...deviceSnap.val(), id: deviceId});
+    deviceRef
+      .child('type')
+      .once('value')
+      .then(typeSnap => {
+        setDeviceType(typeSnap.val());
         setLoading(false);
-      }
-    });
+      });
+
+    deviceRef
+      .child('unit')
+      .once('value')
+      .then(unitSnap => setDeviceUnit(unitSnap.val()));
+
+    const unsubscribe = deviceRef
+      .child('reads')
+      .limitToLast(1)
+      .on('value', readSnap => {
+        if (readSnap.exists()) {
+          const [lastReadObject] = Object.values(readSnap.val());
+
+          setLastRead(lastReadObject.value);
+        }
+      });
 
     return () => database().ref().off('value', unsubscribe);
   }, [deviceId]);
 
   const getRead = () => {
-    if (typeof device.reads === 'undefined') {
-      return '-';
-    }
-
-    return device.reads;
+    return lastRead !== null ? lastRead : '-';
   };
 
   return (
@@ -48,9 +63,9 @@ export default function Device({deviceId, margin}) {
         />
       ) : (
         <>
-          <Icon name={deviceTypeIconsMap[device.type]} size="70" color="#fff" />
+          <Icon name={deviceTypeIconsMap[deviceType]} size="70" color="#fff" />
           <Text style={styles.deviceMeasure}>
-            {getRead()} {device.unit || ''}
+            {getRead()} {deviceUnit || ''}
           </Text>
         </>
       )}
