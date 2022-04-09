@@ -65,16 +65,17 @@ void processDeviceWork()
   {
     float temperature = getTemperature();
 
-    if (Firebase.RTDB.setFloat(&firebaseDataObject, "device/" + DEVICE_ID + "/reads", temperature))
+    FirebaseJson readData;
+    readData.add("value", temperature);
+
+    if (Firebase.RTDB.pushJSON(&firebaseDataObject, "device/" + DEVICE_ID + "/reads", &readData))
     {
-      Serial.println("PASSED");
-      Serial.println("PATH: " + firebaseDataObject.dataPath());
-      Serial.println("TYPE: " + firebaseDataObject.dataType());
+      Serial.println("Successful write.");
+      Firebase.RTDB.setTimestamp(&firebaseDataObject, firebaseDataObject.dataPath() + "/" + firebaseDataObject.pushName() + "/timestamp");
     }
     else
     {
-      Serial.println("FAILED");
-      Serial.println("REASON: " + firebaseDataObject.errorReason());
+      Serial.println("Failed to write measure. Reason: " + firebaseDataObject.errorReason());
     }
   }
   else
