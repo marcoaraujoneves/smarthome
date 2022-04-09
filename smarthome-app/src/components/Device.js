@@ -1,17 +1,31 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, Image, StyleSheet} from 'react-native';
+import {View, Text, Image, StyleSheet, Switch} from 'react-native';
 import Icon from 'react-native-remix-icon';
 import database from '@react-native-firebase/database';
 
 const deviceTypeIconsMap = {
-  temperature: 'ri-temp-cold-line',
-  brightness: 'ri-sun-line',
-  umidity: 'ri-drop-line',
+  temperature: {
+    type: 'sensor',
+    icon: 'ri-temp-cold-line',
+  },
+  brightness: {
+    type: 'sensor',
+    icon: 'ri-sun-line',
+  },
+  umidity: {
+    type: 'sensor',
+    icon: 'ri-drop-line',
+  },
+  relay: {
+    type: 'actuator',
+    icon: 'ri-plug-line',
+  },
 };
 
 export default function Device({deviceId, margin}) {
   const [loading, setLoading] = useState(true);
   const [lastRead, setLastRead] = useState(null);
+  const [deviceState, setDeviceState] = useState(null);
   const [deviceType, setDeviceType] = useState(null);
   const [deviceUnit, setDeviceUnit] = useState(null);
 
@@ -42,11 +56,45 @@ export default function Device({deviceId, margin}) {
         }
       });
 
+    deviceRef.child('state').on('value', stateSnap => {
+      if (stateSnap.exists()) {
+        setDeviceState(stateSnap.val());
+      }
+    });
+
     return () => database().ref().off('value', unsubscribe);
   }, [deviceId]);
 
   const getRead = () => {
     return lastRead !== null ? lastRead : '-';
+  };
+
+  const toggleRelay = async () => {
+    await database().ref(`/device/${deviceId}/state`).set(!deviceState);
+  };
+
+  const getDeviceBody = () => {
+    if (deviceTypeIconsMap[deviceType].type === 'sensor') {
+      return (
+        <Text style={styles.deviceMeasure}>
+          {getRead()} {deviceUnit || ''}
+        </Text>
+      );
+    }
+
+    if (deviceType === 'relay') {
+      return (
+        <Switch
+          style={styles.deviceMeasure}
+          trackColor={{false: '#4B4B4B', true: '#102A43'}}
+          thumbColor="#B8B8B8"
+          onValueChange={toggleRelay}
+          value={deviceState}
+        />
+      );
+    }
+
+    return <></>;
   };
 
   return (
@@ -63,10 +111,12 @@ export default function Device({deviceId, margin}) {
         />
       ) : (
         <>
-          <Icon name={deviceTypeIconsMap[deviceType]} size="70" color="#fff" />
-          <Text style={styles.deviceMeasure}>
-            {getRead()} {deviceUnit || ''}
-          </Text>
+          <Icon
+            name={deviceTypeIconsMap[deviceType].icon}
+            size="70"
+            color="#fff"
+          />
+          {getDeviceBody()}
         </>
       )}
     </View>
