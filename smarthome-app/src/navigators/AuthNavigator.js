@@ -9,7 +9,7 @@ import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import Register from '../pages/Register';
 import NewHome from '../pages/NewHome';
-import NewComponent from '../pages/NewComponent';
+import NewDevice from '../pages/NewDevice';
 
 const Stack = createStackNavigator();
 
@@ -80,7 +80,7 @@ function AuthNavigator() {
                 }}
                 component={NewHome}
               />
-              <Stack.Screen name="Create Component" component={NewComponent} />
+              <Stack.Screen name="Create Device" component={NewDevice} />
             </>
           )}
         </Stack.Navigator>

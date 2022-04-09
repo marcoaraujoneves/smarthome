@@ -59,13 +59,13 @@ void signupToFirebase()
   Firebase.reconnectWiFi(true);
 }
 
-void processComponentWork()
+void processDeviceWork()
 {
   if (Firebase.ready() && signupOK)
   {
     float temperature = getTemperature();
 
-    if (Firebase.RTDB.setFloat(&firebaseDataObject, "component/" + COMPONENT_ID + "/reads", temperature))
+    if (Firebase.RTDB.setFloat(&firebaseDataObject, "device/" + DEVICE_ID + "/reads", temperature))
     {
       Serial.println("PASSED");
       Serial.println("PATH: " + firebaseDataObject.dataPath());
@@ -106,7 +106,7 @@ void loop()
   case CONNECTED:
     Serial.println("CONNECTED");
 
-    processComponentWork();
+    processDeviceWork();
 
     delay(10000);
     break;

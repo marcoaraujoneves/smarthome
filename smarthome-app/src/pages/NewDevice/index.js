@@ -28,7 +28,7 @@ const boardCharacteristic = '564c9b11-b549-4af0-9675-75225dba6db2';
 const BleManagerModule = NativeModules.BleManager;
 const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 
-const componentTypes = [
+const deviceTypes = [
   {
     type: 'temperature',
     name: 'Temperature',
@@ -41,7 +41,7 @@ const componentTypes = [
   },
 ];
 
-export default function NewComponent({route, navigation}) {
+export default function NewDevice({route, navigation}) {
   const [selectedType, setSelectedType] = useState('');
   const [selectedDevice, setSelectedDevice] = useState();
   const [isScanning, setIsScanning] = useState(false);
@@ -100,13 +100,13 @@ export default function NewComponent({route, navigation}) {
 
   useEffect(() => {
     if (selectedDevice && selectedDevice.name) {
-      const componentTypeName = selectedDevice.name.replace('SmartHome: ', '');
-      const componentType = componentTypes.find(
-        type => type.type === componentTypeName.toLowerCase(),
+      const deviceTypeName = selectedDevice.name.replace('SmartHome: ', '');
+      const deviceType = deviceTypes.find(
+        type => type.type === deviceTypeName.toLowerCase(),
       );
 
-      if (componentType) {
-        setSelectedType(componentType.type);
+      if (deviceType) {
+        setSelectedType(deviceType.type);
       }
     }
   }, [selectedDevice]);
@@ -299,17 +299,17 @@ export default function NewComponent({route, navigation}) {
     intervalId = setInterval(checkSuccess, 2000);
   };
 
-  const handleSuccess = async componentId => {
+  const handleSuccess = async deviceId => {
     setIsWriting(false);
     setIsCreating(true);
     const {room} = route.params;
 
     const roomRef = database().ref(`/room/${room}`);
     const roomSnap = await roomRef.once('value');
-    const {components} = roomSnap.val();
+    const {devices} = roomSnap.val();
 
-    if (!components || !components.includes(componentId)) {
-      await database().ref(`/component/${componentId}`).set({
+    if (!devices || !devices.includes(deviceId)) {
+      await database().ref(`/device/${deviceId}`).set({
         name: 'Temperature Sensor',
         type: 'temperature',
         unit: 'ºC',
@@ -317,7 +317,7 @@ export default function NewComponent({route, navigation}) {
       });
 
       await roomRef.update({
-        components: [...(components || []), componentId],
+        devices: [...(devices || []), deviceId],
       });
 
       setIsCreating(false);
@@ -325,7 +325,7 @@ export default function NewComponent({route, navigation}) {
     } else {
       setIsCreating(false);
 
-      Alert.alert('Error', 'This component was already added to this room.', [
+      Alert.alert('Error', 'This device was already added to this room.', [
         {
           text: 'Cancel',
           onPress: () => {
@@ -372,8 +372,8 @@ export default function NewComponent({route, navigation}) {
           source={require('../../assets/loading.gif')}
         />
       ) : (
-        <Text style={[styles.text, styles.noComponents]}>
-          No components were found!
+        <Text style={[styles.text, styles.noDevices]}>
+          No devices were found!
           <TouchableOpacity activeOpacity={0.75} onPress={() => startScan()}>
             <Text style={[styles.text, styles.scanButton]}>
               Click to scan again.
@@ -384,14 +384,14 @@ export default function NewComponent({route, navigation}) {
     </View>
   );
 
-  const ComponentTypeIndicator = () => (
+  const DeviceTypeIndicator = () => (
     <>
       <View style={styles.contentRow}>
-        <Text style={styles.text}>Component type:</Text>
+        <Text style={styles.text}>Device type:</Text>
       </View>
-      <View style={styles.componentTypesWrapper}>
+      <View style={styles.deviceTypesWrapper}>
         <FlatList
-          data={componentTypes}
+          data={deviceTypes}
           keyExtractor={type => type.type}
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -442,7 +442,7 @@ export default function NewComponent({route, navigation}) {
       availableSsids.length &&
       ssid ? (
         <>
-          <ComponentTypeIndicator />
+          <DeviceTypeIndicator />
 
           <View style={styles.contentRow}>
             <Text style={styles.text}>Connect it to the Wi-Fi network:</Text>
@@ -488,7 +488,7 @@ export default function NewComponent({route, navigation}) {
         </>
       ) : null}
 
-      <LoadingModal isVisible={isCreating} message="Creating component" />
+      <LoadingModal isVisible={isCreating} message="Creating device" />
     </SafeAreaView>
   );
 }
@@ -513,7 +513,7 @@ const styles = StyleSheet.create({
     width: '100%',
   },
 
-  componentTypesWrapper: {
+  deviceTypesWrapper: {
     height: 70,
     marginBottom: 40,
   },
@@ -586,7 +586,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
-  noComponents: {
+  noDevices: {
     textAlign: 'center',
   },
 

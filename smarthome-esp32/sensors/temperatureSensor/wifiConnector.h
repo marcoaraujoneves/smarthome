@@ -10,7 +10,7 @@
 
 #define SERVICE_UUID "5617df76-39f3-44b0-aa1b-c8e71e4caeba"
 #define CHARACTERISTIC_UUID "564c9b11-b549-4af0-9675-75225dba6db2"
-String COMPONENT_ID = "91cef537-feff-45cf-aeed-d4acddd33540";
+String DEVICE_ID = "91cef537-feff-45cf-aeed-d4acddd33540";
 
 String availableNetworks[20] = {""};
 String ssid = "";
@@ -79,7 +79,7 @@ class CustomCharacteristicCallbacks : public BLECharacteristicCallbacks
     String response;
 
     JsonObject &jsonOut = jsonBuffer.createObject();
-    jsonOut["key"] = COMPONENT_ID;
+    jsonOut["key"] = DEVICE_ID;
 
     if (WiFi.status() == WL_CONNECTED)
     {

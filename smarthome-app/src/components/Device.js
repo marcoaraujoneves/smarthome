@@ -3,43 +3,43 @@ import {View, Text, Image, StyleSheet} from 'react-native';
 import Icon from 'react-native-remix-icon';
 import database from '@react-native-firebase/database';
 
-const componentNames = {
+const deviceTypeIconsMap = {
   temperature: 'ri-temp-cold-line',
   brightness: 'ri-sun-line',
   umidity: 'ri-drop-line',
 };
 
-export default function Component({componentId, margin}) {
+export default function Device({deviceId, margin}) {
   const [loading, setLoading] = useState(true);
-  const [component, setComponent] = useState({});
+  const [device, setDevice] = useState({});
 
   useEffect(() => {
-    const componentRef = database().ref(`/component/${componentId}`);
+    const deviceRef = database().ref(`/device/${deviceId}`);
 
-    const unsubscribe = componentRef.on('value', componentSnap => {
-      if (componentSnap.exists()) {
-        setComponent({...componentSnap.val(), id: componentId});
+    const unsubscribe = deviceRef.on('value', deviceSnap => {
+      if (deviceSnap.exists()) {
+        setDevice({...deviceSnap.val(), id: deviceId});
         setLoading(false);
       }
     });
 
     return () => database().ref().off('value', unsubscribe);
-  }, [componentId]);
+  }, [deviceId]);
 
   const getRead = () => {
-    if (typeof component.reads === 'undefined') {
+    if (typeof device.reads === 'undefined') {
       return '-';
     }
 
-    return component.reads;
+    return device.reads;
   };
 
   return (
     <View
       style={[
-        styles.component,
+        styles.deviceContainer,
         margin,
-        loading ? styles.loadingComponent : styles.loadedComponent,
+        loading ? styles.loadingDevice : styles.loadedDevice,
       ]}>
       {loading ? (
         <Image
@@ -48,9 +48,9 @@ export default function Component({componentId, margin}) {
         />
       ) : (
         <>
-          <Icon name={componentNames[component.type]} size="70" color="#fff" />
-          <Text style={styles.componentMeasure}>
-            {getRead()} {component.unit || ''}
+          <Icon name={deviceTypeIconsMap[device.type]} size="70" color="#fff" />
+          <Text style={styles.deviceMeasure}>
+            {getRead()} {device.unit || ''}
           </Text>
         </>
       )}
@@ -59,7 +59,7 @@ export default function Component({componentId, margin}) {
 }
 
 const styles = StyleSheet.create({
-  component: {
+  deviceContainer: {
     borderRadius: 6,
     height: 170,
     width: 170,
@@ -68,18 +68,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  loadingComponent: {
+  loadingDevice: {
     borderWidth: 1,
     borderStyle: 'solid',
     borderColor: '#2e2e2e',
     backgroundColor: '#121212',
   },
 
-  loadedComponent: {
+  loadedDevice: {
     backgroundColor: '#2e2e2e',
   },
 
-  componentMeasure: {
+  deviceMeasure: {
     marginTop: 30,
     fontSize: 26,
     fontWeight: 'bold',

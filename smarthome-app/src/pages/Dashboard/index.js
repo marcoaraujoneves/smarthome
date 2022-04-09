@@ -12,7 +12,7 @@ import database from '@react-native-firebase/database';
 import RoomModal from '../../components/RoomModal';
 import LoadingModal from '../../components/LoadingModal';
 import RoomSelector from '../../components/RoomSelector';
-import Component from '../../components/Component';
+import Device from '../../components/Device';
 
 export default function Dashboard({navigation}) {
   const [user, setUser] = useState({});
@@ -109,75 +109,71 @@ export default function Dashboard({navigation}) {
     }
   };
 
-  const getComponentMargin = id => {
-    const roomComponents =
-      selectedRoom && rooms[selectedRoom] && rooms[selectedRoom].components
-        ? rooms[selectedRoom].components
+  const getDeviceMargin = id => {
+    const roomDevices =
+      selectedRoom && rooms[selectedRoom] && rooms[selectedRoom].devices
+        ? rooms[selectedRoom].devices
         : [];
 
-    const componentIndex = id
-      ? roomComponents.findIndex(componentId => componentId === id)
-      : roomComponents.length;
+    const deviceIndex = id
+      ? roomDevices.findIndex(deviceId => deviceId === id)
+      : roomDevices.length;
 
     let marginLeft = 0;
 
-    if (componentIndex % 2 === 1) {
+    if (deviceIndex % 2 === 1) {
       marginLeft = 39;
     }
 
     return {marginLeft};
   };
 
-  const getComponentsListData = () => {
+  const getDevicesListData = () => {
     if (
       rooms &&
       selectedRoom &&
       rooms[selectedRoom] &&
-      rooms[selectedRoom].components
+      rooms[selectedRoom].devices
     ) {
-      return [...rooms[selectedRoom].components, {extraButton: true}];
+      return [...rooms[selectedRoom].devices, {extraButton: true}];
     }
 
     return [];
   };
 
-  const componentsListView = (
+  const devicesListView = (
     <FlatList
       numColumns={2}
-      style={styles.componentsContainer}
-      contentContainerStyle={styles.componentsContainerStyle}
-      data={getComponentsListData()}
+      style={styles.devicesContainer}
+      contentContainerStyle={styles.devicesContainerStyle}
+      data={getDevicesListData()}
       keyExtractor={item =>
-        item.extraButton ? `create-${selectedRoom}-component` : item
+        item.extraButton ? `create-${selectedRoom}-device` : item
       }
       renderItem={({item}) =>
         item.extraButton ? (
           <TouchableOpacity
-            style={[styles.addButtonSmall, getComponentMargin()]}
+            style={[styles.addButtonSmall, getDeviceMargin()]}
             onPress={() =>
-              navigation.navigate('Create Component', {
+              navigation.navigate('Create Device', {
                 room: selectedRoom,
               })
             }>
             <Text style={styles.addButtonTextSmall}>+</Text>
           </TouchableOpacity>
         ) : (
-          <Component
-            componentId={item}
-            key={item}
-            margin={getComponentMargin(item)}
-          />
+          <Device deviceId={item} key={item} margin={getDeviceMargin(item)} />
         )
       }
     />
   );
 
-  const createComponentView = (
+  const createDeviceView = (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity
         style={styles.addButton}
         onPress={() =>
-          navigation.navigate('Create Component', {
+          navigation.navigate('Create Device', {
             room: selectedRoom,
           })
         }>
@@ -185,8 +181,8 @@ export default function Dashboard({navigation}) {
       </TouchableOpacity>
 
       <Text style={styles.emptyScreenMessage}>
-        To start using this app, you need to add components. Just click the
-        button above!
+        To start using this app, you need to add devices. Just click the button
+        above!
       </Text>
     </SafeAreaView>
   );
@@ -206,9 +202,9 @@ export default function Dashboard({navigation}) {
         handleNewRoom={handleNewRoom}
       />
 
-      {selectedRoom && rooms[selectedRoom] && rooms[selectedRoom].components
-        ? componentsListView
-        : createComponentView}
+      {selectedRoom && rooms[selectedRoom] && rooms[selectedRoom].devices
+        ? devicesListView
+        : createDeviceView}
     </SafeAreaView>
   ) : (
     <SafeAreaView style={styles.container}>
@@ -291,9 +287,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  componentsContainer: {},
+  devicesContainer: {},
 
-  componentsContainerStyle: {
+  devicesContainerStyle: {
     flex: 1,
     width: 379,
     alignItems: 'flex-start',

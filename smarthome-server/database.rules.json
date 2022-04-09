@@ -12,8 +12,8 @@
         ".write": "root.child('home').child(newData.child('home').val()).child('owner').val() == auth.uid"
       }
     },
-    "component": {
-      "$componentId": {
+    "device": {
+      "$deviceId": {
         ".read": "root.child('home').child(root.child('room').child(data.child('room').val()).child('home').val()).child('owner').val() == auth.uid",
         ".write": "true"
       }

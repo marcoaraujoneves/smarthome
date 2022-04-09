@@ -10,7 +10,7 @@ function userIsRoomOwner(homeId) {
   return (userIsHomeOwner(prior(root).home[homeId].owner))
 }
 
-function userIsComponentOwner(roomId) {
+function userIsDeviceOwner(roomId) {
   return (userIsRoomOwner(prior(root).room[roomId].home))
 }
 
@@ -28,9 +28,9 @@ path /room {
   }
 }
 
-path /component {
-  /{componentId} {
-    read() { userIsComponentOwner(this.room) }
+path /device {
+  /{deviceId} {
+    read() { userIsDeviceOwner(this.room) }
     write() { true }
   }
 }
