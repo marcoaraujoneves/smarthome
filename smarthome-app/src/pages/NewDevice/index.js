@@ -31,13 +31,21 @@ const bleManagerEmitter = new NativeEventEmitter(BleManagerModule);
 const deviceTypes = [
   {
     type: 'temperature',
-    name: 'Temperature',
+    name: 'Temperature Sensor',
     icon: 'ri-temp-cold-line',
+    unit: 'ºC',
   },
   {
     type: 'light',
-    name: 'Light Level',
+    name: 'Light Level Sensor',
     icon: 'ri-sun-line',
+    unit: '%',
+  },
+  {
+    type: 'relay',
+    name: 'Relay Actuator',
+    icon: 'ri-plug-line',
+    unit: null,
   },
 ];
 
@@ -309,10 +317,12 @@ export default function NewDevice({route, navigation}) {
     const {devices} = roomSnap.val();
 
     if (!devices || !devices.includes(deviceId)) {
+      const {name, unit} = deviceTypes.find(type => type.type === selectedType);
+
       await database().ref(`/device/${deviceId}`).set({
-        name: 'Temperature Sensor',
-        type: 'temperature',
-        unit: 'ºC',
+        type: selectedType,
+        name,
+        unit,
         room,
       });
 
