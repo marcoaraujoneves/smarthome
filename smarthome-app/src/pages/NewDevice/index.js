@@ -372,14 +372,17 @@ export default function NewDevice({route, navigation}) {
           source={require('../../assets/loading.gif')}
         />
       ) : (
-        <Text style={[styles.text, styles.noDevices]}>
-          No devices were found!
+        <>
+          <Text style={[styles.text, styles.noDevices]}>
+            No devices were found!
+          </Text>
+
           <TouchableOpacity activeOpacity={0.75} onPress={() => startScan()}>
             <Text style={[styles.text, styles.scanButton]}>
               Click to scan again.
             </Text>
           </TouchableOpacity>
-        </Text>
+        </>
       )}
     </View>
   );
