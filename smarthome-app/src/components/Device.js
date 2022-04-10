@@ -22,23 +22,12 @@ const deviceTypeIconsMap = {
   },
 };
 
-export default function Device({deviceId, margin}) {
-  const [loading, setLoading] = useState(true);
+function SensorBody({deviceId}) {
   const [lastRead, setLastRead] = useState(null);
-  const [deviceState, setDeviceState] = useState(null);
-  const [deviceType, setDeviceType] = useState(null);
   const [deviceUnit, setDeviceUnit] = useState(null);
 
   useEffect(() => {
     const deviceRef = database().ref(`/device/${deviceId}`);
-
-    deviceRef
-      .child('type')
-      .once('value')
-      .then(typeSnap => {
-        setDeviceType(typeSnap.val());
-        setLoading(false);
-      });
 
     deviceRef
       .child('unit')
@@ -56,12 +45,6 @@ export default function Device({deviceId, margin}) {
         }
       });
 
-    deviceRef.child('state').on('value', stateSnap => {
-      if (stateSnap.exists()) {
-        setDeviceState(stateSnap.val());
-      }
-    });
-
     return () => database().ref().off('value', unsubscribe);
   }, [deviceId]);
 
@@ -69,29 +52,77 @@ export default function Device({deviceId, margin}) {
     return lastRead !== null ? lastRead : '-';
   };
 
+  return (
+    <Text style={styles.deviceMeasure}>
+      {getRead()} {deviceUnit || ''}
+    </Text>
+  );
+}
+
+function ActuatorBody({deviceId}) {
+  const [writing, setWriting] = useState(true);
+  const [deviceState, setDeviceState] = useState(null);
+
+  useEffect(() => {
+    const deviceRef = database().ref(`/device/${deviceId}`);
+
+    const unsubscribe = deviceRef.child('state').on('value', stateSnap => {
+      if (stateSnap.exists()) {
+        setWriting(false);
+        setDeviceState(stateSnap.val());
+      }
+    });
+
+    return () => database().ref().off('value', unsubscribe);
+  }, [deviceId]);
+
   const toggleRelay = async () => {
-    await database().ref(`/device/${deviceId}/state`).set(!deviceState);
+    setWriting(true);
+
+    await database()
+      .ref(`/device/${deviceId}/write`)
+      .set(deviceState ? 'TOGGLE_OFF' : 'TOGGLE_ON');
   };
+
+  return writing ? (
+    <Image
+      style={styles.animationSmall}
+      source={require('../assets/loading.gif')}
+    />
+  ) : (
+    <Switch
+      style={styles.deviceMeasure}
+      trackColor={{false: '#4B4B4B', true: '#102A43'}}
+      thumbColor="#B8B8B8"
+      onValueChange={toggleRelay}
+      value={deviceState}
+    />
+  );
+}
+
+export default function Device({deviceId, margin}) {
+  const [loading, setLoading] = useState(true);
+  const [deviceType, setDeviceType] = useState(null);
+
+  useEffect(() => {
+    const deviceRef = database().ref(`/device/${deviceId}`);
+
+    deviceRef
+      .child('type')
+      .once('value')
+      .then(typeSnap => {
+        setDeviceType(typeSnap.val());
+        setLoading(false);
+      });
+  }, [deviceId]);
 
   const getDeviceBody = () => {
     if (deviceTypeIconsMap[deviceType].type === 'sensor') {
-      return (
-        <Text style={styles.deviceMeasure}>
-          {getRead()} {deviceUnit || ''}
-        </Text>
-      );
+      return <SensorBody deviceId={deviceId} />;
     }
 
     if (deviceType === 'relay') {
-      return (
-        <Switch
-          style={styles.deviceMeasure}
-          trackColor={{false: '#4B4B4B', true: '#102A43'}}
-          thumbColor="#B8B8B8"
-          onValueChange={toggleRelay}
-          value={deviceState}
-        />
-      );
+      return <ActuatorBody deviceId={deviceId} />;
     }
 
     return <></>;
@@ -155,5 +186,11 @@ const styles = StyleSheet.create({
   animation: {
     height: 50,
     width: 50,
+  },
+
+  animationSmall: {
+    marginTop: 30,
+    height: 27,
+    width: 27,
   },
 });
