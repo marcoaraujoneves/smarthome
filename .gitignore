@@ -1,3 +1,4 @@
 .vscode/*
 
 smarthome-esp32/sensors/**/secrets.h
+smarthome-esp32/actuators/**/secrets.h
